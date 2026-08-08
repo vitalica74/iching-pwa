@@ -1,0 +1,1 @@
+{"name":"Книга Змін — Іцзін","short_name":"Іцзін","description":"Офлайн PWA для методу трьох монет","lang":"uk","start_url":"./","scope":"./","display":"standalone","background_color":"#0f172a","theme_color":"#0f172a","icons":[{"src":"icons/icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]}
