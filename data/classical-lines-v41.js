@@ -1,10 +1,21 @@
 import {getClassicalLineInterpretations as getLegacyClassicalLineInterpretations} from './classical-lines.js';
 import {WILHELM_01_04,SHCHUTSKY_01_04} from './classical-lines-01-04.js';
+import {WILHELM_05_10,SHCHUTSKY_05_10} from './classical-lines-05-10.js';
+
+const WILHELM = {
+  ...WILHELM_01_04,
+  ...WILHELM_05_10
+};
+
+const SHCHUTSKY = {
+  ...SHCHUTSKY_01_04,
+  ...SHCHUTSKY_05_10
+};
 
 export function getClassicalLineInterpretations(hexagramNumber,lineNumber){
   const h=Number(hexagramNumber),l=Number(lineNumber);
-  const wilhelm=WILHELM_01_04[h]?.[l]||null;
-  const shchutsky=SHCHUTSKY_01_04[h]?.[l]||null;
+  const wilhelm=WILHELM[h]?.[l]||null;
+  const shchutsky=SHCHUTSKY[h]?.[l]||null;
   if(wilhelm||shchutsky){
     return {
       available:true,
