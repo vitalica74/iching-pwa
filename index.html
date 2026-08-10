@@ -44,30 +44,30 @@
       <article id="answer-result" class="card answer-card hidden" aria-live="polite">
         <p class="progress">Рекомендація · <span id="active-reading-mode">Практичний</span> режим</p>
         <section class="answer-summary">
-          <h2>Суть відповіді</h2>
+          <h2>Поточний стан</h2>
           <p id="answer-essence"></p>
         </section>
 
         <div class="answer-steps">
           <section class="answer-step answer-step-action">
             <span class="step-number">1</span>
-            <div><h3>Що робити</h3><p id="answer-action"></p></div>
+            <div><h3>Ключова дія</h3><p id="answer-action"></p></div>
           </section>
           <section class="answer-step">
             <span class="step-number">2</span>
-            <div><h3>До чого це веде</h3><p id="answer-development"></p></div>
+            <div><h3>Напрямок розвитку</h3><p id="answer-development"></p></div>
           </section>
         </div>
 
         <section id="classical-section" class="classical-section">
-          <div class="section-heading compact-heading"><h3>Класичні трактування</h3><span id="classical-status" class="history-hint"></span></div>
+          <div class="section-heading compact-heading"><h3>Класичні трактування стану</h3><span id="classical-status" class="history-hint"></span></div>
           <article class="classical-card"><h4>Ріхард Вільгельм</h4><p id="wilhelm-text"></p><small>Стислий авторський переказ, не цитата.</small></article>
           <article class="classical-card"><h4>Юліан Шуцький</h4><p id="shchutsky-text"></p><small>Стислий авторський переказ, не цитата.</small></article>
         </section>
 
         <div class="knowledge-sections">
           <details class="knowledge-details">
-            <summary>Чому зроблено такий висновок</summary>
+            <summary>Логіка читання</summary>
             <div class="details-body">
               <p id="rationale-lines"></p>
               <p id="rationale-transition"></p>
@@ -75,28 +75,30 @@
           </details>
 
           <details class="knowledge-details">
-            <summary id="primary-details-title">Основна гексаграма</summary>
+            <summary id="primary-details-title">Поточна гексаграма</summary>
             <div class="details-body">
               <p id="primary-meaning"></p>
+              <h4>Цикл стану</h4><p id="primary-cycle" class="cycle-text"></p>
               <h4>На що звернути увагу</h4><p id="primary-caution"></p>
             </div>
           </details>
 
           <details id="changing-details" class="knowledge-details">
-            <summary id="changing-details-title">Змінні лінії</summary>
+            <summary id="changing-details-title">Точки зміни</summary>
             <div id="changing-lines-list" class="details-body"></div>
           </details>
 
           <details id="secondary-details" class="knowledge-details hidden">
-            <summary id="secondary-details-title">Додаткова гексаграма</summary>
+            <summary id="secondary-details-title">Напрямок розвитку</summary>
             <div class="details-body secondary-details-body">
-              <div id="secondary-hexagram" class="hexagram compact-hexagram" aria-label="Додаткова гексаграма"></div>
-              <h4>Про що говорить новий стан</h4><p id="secondary-meaning"></p>
+              <div id="secondary-hexagram" class="hexagram compact-hexagram" aria-label="Результуюча гексаграма"></div>
+              <h4>Новий стан</h4><p id="secondary-meaning"></p>
+              <h4>Цикл нового стану</h4><p id="secondary-cycle" class="cycle-text"></p>
             </div>
           </details>
 
           <details class="knowledge-details">
-            <summary id="transition-title">Повний розбір переходу</summary>
+            <summary id="transition-title">Зв’язок між станами</summary>
             <div class="details-body">
               <h4>Перехід</h4><p id="transition-summary"></p>
               <h4>Що саме змінюється</h4><p id="transition-change"></p>
@@ -146,14 +148,14 @@
         <select id="mode-select"><option value="practical">Практичний — спочатку коротка відповідь</option><option value="classic">Класичний — спочатку Вільгельм і Шуцький</option></select>
         <label class="field-label" for="collection-select">Збірка</label>
         <select id="collection-select"><option value="official">Основна авторська бібліотека</option><option value="user">Моя бібліотека (розширення)</option></select>
-        <p class="muted">Два режими змінюють лише порядок читання, а не зміст. У практичному режимі спочатку йде наш короткий синтез; у класичному — спочатку Вільгельм і Шуцький. Контекст лише адаптує практичну пораду до обраної сфери.</p>
+        <p class="muted">Два режими змінюють лише порядок читання, а не зміст. Практичний шар дає одну синтезовану дію; Вільгельм і Шуцький залишаються окремими класичними ракурсами. Контекст адаптує лише практичну дію.</p>
       </article>
       <article class="card settings-card">
         <h2>Про додаток</h2>
-        <p><strong>Версія:</strong> 4.0.0 PWA</p>
+        <p><strong>Версія:</strong> 4.1.0 PWA</p>
         <p><strong>Метод:</strong> три монети, шість ліній знизу вгору</p>
+        <p><strong>Модель читання:</strong> поточний стан → точки зміни → напрямок розвитку</p>
         <p><strong>Генератор:</strong> Web Crypto API + ентропія взаємодії</p>
-        <p><strong>Бібліотека:</strong> 64 гексаграми, 384 змінні лінії та розширювана база 4096 переходів</p>
         <p><strong>Робота:</strong> офлайн після першого відкриття</p>
         <p><strong>Історія:</strong> IndexedDB із точним знімком отриманої інтерпретації</p>
       </article>
