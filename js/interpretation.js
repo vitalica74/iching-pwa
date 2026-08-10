@@ -2,6 +2,7 @@ import {getChangingLines} from '../data/changing-lines.js';
 import {getTransition} from '../data/transitions.js';
 import {CONTEXTS} from '../data/profiles.js';
 import {getClassicalInterpretations} from '../data/classical-sources.js';
+import {getHexagramCycle} from '../data/hexagram-cycles-01-10.js';
 
 const ensurePeriod=text=>{const value=String(text??'').trim();return value&&!/[.!?…]$/.test(value)?`${value}.`:value};
 const lowerFirst=text=>{const value=String(text??'').trim();return value?value[0].toLocaleLowerCase('uk-UA')+value.slice(1):value};
@@ -31,6 +32,8 @@ export function buildInterpretation({primary,secondary,changingPositions,context
   const transition=exact?{...exact,exact:true}:fallbackTransition(primary,secondary,hasChanges);
   const lineFocus=summarizeLineFocus(lines);
   const classics=getClassicalInterpretations(primary.number);
+  const primaryCycle=getHexagramCycle(primary.number);
+  const secondaryCycle=getHexagramCycle(secondary.number);
 
   // Свідомо стискаємо головну відповідь до трьох різних функцій, без повторення одного сенсу.
   const essence=firstSentence(hasChanges?transition.summary:primary.desc);
@@ -38,14 +41,14 @@ export function buildInterpretation({primary,secondary,changingPositions,context
   const development=hasChanges?firstSentence(transition.future||secondary.desc):firstSentence(primary.desc);
 
   return {
-    schemaVersion:3,
+    schemaVersion:4,
     mode,
     answer:{essence,action,development},
     rationale:{lines:lineFocus,transition:hasChanges?'Основна гексаграма показує теперішній стан, змінні лінії — місце зміни, додаткова — напрям розвитку.':'Без змінних ліній головним орієнтиром залишається основна гексаграма.'},
-    primary:{meaning:ensurePeriod(primary.desc),advice:ensurePeriod(primary.advice),caution:ensurePeriod(primary.caution)},
+    primary:{meaning:ensurePeriod(primary.desc),advice:ensurePeriod(primary.advice),caution:ensurePeriod(primary.caution),cycle:primaryCycle},
     lines,
     transition,
-    secondary:{meaning:ensurePeriod(secondary.desc),advice:ensurePeriod(secondary.advice),caution:ensurePeriod(secondary.caution)},
+    secondary:{meaning:ensurePeriod(secondary.desc),advice:ensurePeriod(secondary.advice),caution:ensurePeriod(secondary.caution),cycle:secondaryCycle},
     classics,
     conclusion:[essence,action,development].filter(Boolean).join(' ')
   };
