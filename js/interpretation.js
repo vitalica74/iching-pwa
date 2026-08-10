@@ -17,8 +17,16 @@ function contextualize(text,context){
 function summarizeLineFocus(lines){
   if(!lines.length)return 'Змінних ліній немає: ситуація радше просить правильно прожити наявний стан, ніж шукати різкий перелом.';
   const stages=joinNatural(lines.map(line=>line.stage));
-  if(lines.length===1)return `Ключова зміна відбувається на рівні «${stages}»: ${lowerFirst(lines[0].advice)}`;
-  return `Зміни торкаються рівнів: ${stages}. Не перебудовуйте все одразу; починайте з найнижчої змінної лінії.`;
+  if(lines.length===1)return `Ключова зміна відбувається на рівні «${stages}».`;
+  return `Зміни торкаються рівнів: ${stages}.`;
+}
+function synthesizeAction(lines,primary,transition,context){
+  if(!lines.length)return contextualize(primary.advice,context);
+  if(lines.length===1)return contextualize(lines[0].advice,context);
+  const first=lines[0]?.advice;
+  const last=lines[lines.length-1]?.advice;
+  const combined=first===last?first:`Почніть із нижчої активної точки: ${lowerFirst(first)} Далі врахуйте верхню межу змін: ${lowerFirst(last)}`;
+  return contextualize(combined||transition.recommendation||primary.advice,context);
 }
 function fallbackTransition(primary,secondary,hasChanges){
   if(!hasChanges)return {summary:`Стан «${primary.name}» залишається головним орієнтиром.`,change:'Окремого переходу до іншої гексаграми не показано.',recommendation:primary.advice,danger:primary.caution,future:'Подальший розвиток залежить від того, наскільки послідовно буде втілена порада основної гексаграми.',exact:false};
@@ -35,20 +43,21 @@ export function buildInterpretation({primary,secondary,changingPositions,context
   const primaryCycle=getHexagramCycle(primary.number);
   const secondaryCycle=getHexagramCycle(secondary.number);
 
-  // Свідомо стискаємо головну відповідь до трьох різних функцій, без повторення одного сенсу.
-  const essence=firstSentence(hasChanges?transition.summary:primary.desc);
-  const action=contextualize(transition.recommendation||primary.advice,context);
-  const development=hasChanges?firstSentence(transition.future||secondary.desc):firstSentence(primary.desc);
+  // Верхній блок має три різні функції: стан, конкретна дія, напрямок.
+  // Практична дія береться зі змінної лінії/ліній, щоб не дублювати загальну пораду гексаграми.
+  const essence=firstSentence(primary.desc);
+  const action=synthesizeAction(lines,primary,transition,context);
+  const development=hasChanges?firstSentence(secondary.desc):'Окремого напрямку переходу немає: головним залишається поточний стан.';
 
   return {
-    schemaVersion:4,
+    schemaVersion:5,
     mode,
     answer:{essence,action,development},
-    rationale:{lines:lineFocus,transition:hasChanges?'Основна гексаграма показує теперішній стан, змінні лінії — місце зміни, додаткова — напрям розвитку.':'Без змінних ліній головним орієнтиром залишається основна гексаграма.'},
-    primary:{meaning:ensurePeriod(primary.desc),advice:ensurePeriod(primary.advice),caution:ensurePeriod(primary.caution),cycle:primaryCycle},
+    rationale:{lines:lineFocus,transition:hasChanges?'Поточна гексаграма задає стан, змінні лінії показують активні точки, результуюча гексаграма — напрямок розвитку.':'Без змінних ліній головним орієнтиром залишається поточна гексаграма.'},
+    primary:{meaning:ensurePeriod(primary.desc),caution:ensurePeriod(primary.caution),cycle:primaryCycle},
     lines,
     transition,
-    secondary:{meaning:ensurePeriod(secondary.desc),advice:ensurePeriod(secondary.advice),caution:ensurePeriod(secondary.caution),cycle:secondaryCycle},
+    secondary:{meaning:ensurePeriod(secondary.desc),cycle:secondaryCycle},
     classics,
     conclusion:[essence,action,development].filter(Boolean).join(' ')
   };
