@@ -6,14 +6,17 @@ const numberFrom=text=>{
   return match?Number(match[1]):null;
 };
 const formatCycle=cycle=>Array.isArray(cycle)&&cycle.length?cycle.join(' → '):'Цикл для цієї гексаграми ще доповнюється.';
+const setIfChanged=(element,value)=>{
+  if(element&&element.textContent!==value)element.textContent=value;
+};
 
 function renderCycles(){
   const primaryNumber=numberFrom($('#primary-details-title')?.textContent);
   const secondaryNumber=numberFrom($('#secondary-details-title')?.textContent);
   const primary=$('#primary-cycle');
   const secondary=$('#secondary-cycle');
-  if(primary)primary.textContent=formatCycle(getHexagramCycle(primaryNumber));
-  if(secondary)secondary.textContent=formatCycle(getHexagramCycle(secondaryNumber));
+  setIfChanged(primary,formatCycle(getHexagramCycle(primaryNumber)));
+  setIfChanged(secondary,formatCycle(getHexagramCycle(secondaryNumber)));
 }
 
 const target=$('#answer-result');
