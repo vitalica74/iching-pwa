@@ -1,12 +1,12 @@
-const CACHE='iching-pwa-v28';
+const CACHE='iching-pwa-v29';
 const OFFLINE_URL='./index.html';
 const ASSETS=[
 './','./index.html','./css/styles.css','./manifest.webmanifest','./icons/icon.svg',
 './js/app.js','./js/v41-ui.js','./js/random.js','./js/storage.js','./js/ui.js','./js/interpretation.js','./js/preferences.js',
 './data/hexagrams.js','./data/profiles.js','./data/transitions.js','./data/classical-sources.js','./data/classical-lines.js',
-'./data/changing-lines.js','./data/changing-lines-clean.js','./data/changing-lines-01-04.js','./data/changing-lines-05-10.js','./data/changing-lines-11-16.js','./data/changing-lines-17-24.js',
-'./data/classical-lines-v41.js','./data/classical-lines-clean.js','./data/classical-lines-01-04.js','./data/classical-lines-05-10.js','./data/classical-lines-11-16-data.js','./data/classical-lines-17-24.js',
-'./data/hexagram-cycles.js','./data/hexagram-cycles-01-10.js','./data/hexagram-cycles-01-10-data.js','./data/hexagram-cycles-11-16-data.js','./data/hexagram-cycles-17-24.js'
+'./data/changing-lines.js','./data/changing-lines-clean.js','./data/changing-lines-01-04.js','./data/changing-lines-05-10.js','./data/changing-lines-11-16.js','./data/changing-lines-17-24.js','./data/changing-lines-25-32.js',
+'./data/classical-lines-v41.js','./data/classical-lines-clean.js','./data/classical-lines-01-04.js','./data/classical-lines-05-10.js','./data/classical-lines-11-16-data.js','./data/classical-lines-17-24.js','./data/classical-lines-25-32.js',
+'./data/hexagram-cycles.js','./data/hexagram-cycles-01-10.js','./data/hexagram-cycles-01-10-data.js','./data/hexagram-cycles-11-16-data.js','./data/hexagram-cycles-17-24.js','./data/hexagram-cycles-25-32.js'
 ];
 
 self.addEventListener('install',event=>event.waitUntil((async()=>{
