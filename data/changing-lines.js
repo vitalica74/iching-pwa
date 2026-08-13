@@ -1,1 +1,1 @@
-export {getChangingLine,getChangingLines} from './lines-49-56-registry.js';
+export {getChangingLine,getChangingLines} from './lines-57-64-registry.js';
