@@ -1,4 +1,4 @@
-import {getClassicalLineInterpretations as base} from './classical-lines-clean.js';
+import {getClassicalLineInterpretations as base} from './lines-classics-33-40-registry.js';
 import {WILHELM_41,SHCHUTSKY_41} from './classical-lines-41.js';
 import {WILHELM_42} from './classical-lines-42-w.js';
 import {SHCHUTSKY_42} from './classical-lines-42-s.js';
