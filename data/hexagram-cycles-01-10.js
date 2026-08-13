@@ -1,2 +1,2 @@
 export {HEXAGRAM_CYCLES_01_10} from './hexagram-cycles-01-10-data.js';
-export {getHexagramCycle} from './hexagram-cycles-v41.js';
+export {getHexagramCycle} from './hexagram-cycles-49-56-registry.js';
