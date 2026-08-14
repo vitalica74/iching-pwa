@@ -11,6 +11,19 @@ const setIfChanged=(element,value)=>{
   if(element&&element.textContent!==value)element.textContent=value;
 };
 
+function ensureDisclosureIndicatorStyles(){
+  if(document.querySelector('#v41-disclosure-indicator-fix'))return;
+  const style=document.createElement('style');
+  style.id='v41-disclosure-indicator-fix';
+  style.textContent=`
+    .knowledge-details > summary::after{content:'+'}
+    .knowledge-details[open] > summary::after{content:'−'}
+    .line-classical-details > summary::after{content:'+' !important}
+    .line-classical-details[open] > summary::after{content:'−' !important}
+  `;
+  document.head.appendChild(style);
+}
+
 function ensureClassicalDetails(parent,id,title){
   let details=document.querySelector(`#${id}`);
   if(details)return details;
@@ -67,6 +80,7 @@ function renderSecondaryClassics(number){
 }
 
 function renderProgressiveDisclosure(){
+  ensureDisclosureIndicatorStyles();
   organizeKnowledge();
   const primaryNumber=numberFrom($('#primary-details-title')?.textContent);
   const secondaryNumber=numberFrom($('#secondary-details-title')?.textContent);
