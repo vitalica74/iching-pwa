@@ -1,0 +1,37 @@
+<!doctype html><html lang="uk"><meta charset="utf-8"><title>v4.1 audit</title><body><pre id="result">running...</pre><script type="module">
+import {HEXAGRAMS,canonicalHexagramNumber,getHexagramData,validateCanonicalMapping} from './data/hexagrams.js';
+import {getChangingLines,validateChangingLinesCorpus} from './data/changing-lines.js';
+import {validateClassicalLineCorpus} from './data/classical-lines.js';
+import {validateClassicalCorpus} from './data/classical-sources.js';
+import {validateHexagramCycles,getHexagramCycle} from './data/hexagram-cycles.js';
+import {buildInterpretation} from './js/interpretation.js';
+const report={};
+try{
+ report.mapping={ok:validateCanonicalMapping(),count:Object.keys(HEXAGRAMS).length};
+ report.practical=validateChangingLinesCorpus();
+ report.classicalLines=validateClassicalLineCorpus();
+ report.classicalHexagrams=validateClassicalCorpus();
+ report.cycles=validateHexagramCycles();
+ let queries=0, failures=[];
+ const mkLines=n=>Array.from({length:6},(_,i)=>({type:((n>>i)&1)?'yang':'yin',changing:false,value:((n>>i)&1)?7:8}));
+ for(let state=0;state<64;state++){
+   const lines=mkLines(state);
+   const primaryNumber=canonicalHexagramNumber(lines);
+   const primary=getHexagramData(primaryNumber);
+   for(let mask=0;mask<64;mask++){
+     const changed=lines.map((line,i)=>({...line,type:(mask>>i)&1?(line.type==='yang'?'yin':'yang'):line.type}));
+     const secondary=getHexagramData(canonicalHexagramNumber(changed));
+     const positions=Array.from({length:6},(_,i)=>((mask>>i)&1)?i+1:null).filter(Boolean);
+     try{
+       const out=buildInterpretation({primary,secondary,changingPositions:positions,context:'general',mode:'practical'});
+       const ok=out?.answer?.essence&&out?.answer?.action&&out?.answer?.development&&Array.isArray(out.lines)&&out.lines.length===positions.length&&Array.isArray(out.primary?.cycle)&&out.primary.cycle.length===6&&Array.isArray(out.secondary?.cycle)&&out.secondary.cycle.length===6&&out.lines.every(x=>x.classical?.verified);
+       if(!ok)failures.push({primary:primaryNumber,secondary:secondary.number,positions,reason:'incomplete output'});
+     }catch(error){failures.push({primary:primaryNumber,secondary:secondary.number,positions,reason:String(error?.message||error)});}
+     queries++;
+   }
+ }
+ report.queries={ok:failures.length===0,tested:queries,failures:failures.slice(0,20),failureCount:failures.length};
+ report.ok=report.mapping.ok&&report.mapping.count===64&&report.practical.ok&&report.classicalLines.ok&&report.classicalHexagrams.ok&&report.cycles.ok&&report.queries.ok;
+}catch(error){report.ok=false;report.fatal=String(error?.stack||error);}
+document.querySelector('#result').textContent=JSON.stringify(report,null,2);
+</script></body></html>
