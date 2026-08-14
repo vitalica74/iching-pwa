@@ -1,4 +1,4 @@
-const CACHE='iching-pwa-v41-20260814-1';
+const CACHE='iching-pwa-v41-20260814-2';
 const OFFLINE_URL='./index.html';
 const ASSETS=[
   './','./index.html','./css/styles.css','./manifest.webmanifest','./icons/icon.svg',
@@ -50,12 +50,10 @@ self.addEventListener('fetch',event=>{
   event.respondWith((async()=>{
     const cache=await caches.open(CACHE);
     try{
-      // Network-first: when online, always prefer the newest deployed file.
       const response=await fetchFresh(event.request);
       if(response.ok)await cache.put(event.request,response.clone());
       return response;
     }catch(error){
-      // Offline fallback keeps the PWA fully usable without touching localStorage/history.
       const cached=await cache.match(event.request,{ignoreSearch:true});
       if(cached)return cached;
       if(event.request.mode==='navigate'){
