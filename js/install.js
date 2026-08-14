@@ -1,12 +1,31 @@
 let deferredInstallPrompt=null;
 
-const installCard=document.querySelector('#install-app-card');
-const installButton=document.querySelector('#install-app-button');
-const installHint=document.querySelector('#install-app-hint');
-
 function isStandalone(){
   return window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true;
 }
+
+function ensureInstallCard(){
+  let card=document.querySelector('#install-app-card');
+  if(card)return card;
+
+  const settings=document.querySelector('#tab-settings');
+  if(!settings)return null;
+
+  card=document.createElement('article');
+  card.id='install-app-card';
+  card.className='card settings-card hidden';
+  card.innerHTML=`
+    <h2>Встановити додаток</h2>
+    <p id="install-app-hint" class="muted">Встановіть Книгу Змін як окремий застосунок. Після встановлення він працюватиме з головного екрана та офлайн.</p>
+    <button id="install-app-button" class="secondary-button full" type="button">Встановити Книгу Змін</button>
+  `;
+  settings.prepend(card);
+  return card;
+}
+
+const installCard=ensureInstallCard();
+const installButton=installCard?.querySelector('#install-app-button');
+const installHint=installCard?.querySelector('#install-app-hint');
 
 function hideInstall(){
   installCard?.classList.add('hidden');
@@ -39,7 +58,7 @@ if(isStandalone()){
     await prompt.prompt();
     const choice=await prompt.userChoice;
     if(choice.outcome==='accepted')hideInstall();
-    else if(installHint)installHint.textContent='Встановлення скасовано. Кнопка залишиться доступною, коли браузер знову дозволить встановлення.';
+    else if(installHint)installHint.textContent='Встановлення скасовано. Кнопка з’явиться знову, коли браузер повторно дозволить встановлення.';
   });
 
   window.addEventListener('appinstalled',hideInstall);
