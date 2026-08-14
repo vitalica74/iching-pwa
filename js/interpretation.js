@@ -2,7 +2,7 @@ import {getChangingLines} from '../data/changing-lines.js';
 import {getTransition} from '../data/transitions.js';
 import {CONTEXTS} from '../data/profiles.js';
 import {getClassicalInterpretations} from '../data/classical-sources.js';
-import {getHexagramCycle} from '../data/hexagram-cycles-01-10.js';
+import {getHexagramCycle} from '../data/hexagram-cycles.js';
 
 const ensurePeriod=text=>{const value=String(text??'').trim();return value&&!/[.!?…]$/.test(value)?`${value}.`:value};
 const lowerFirst=text=>{const value=String(text??'').trim();return value?value[0].toLocaleLowerCase('uk-UA')+value.slice(1):value};
@@ -43,8 +43,6 @@ export function buildInterpretation({primary,secondary,changingPositions,context
   const primaryCycle=getHexagramCycle(primary.number);
   const secondaryCycle=getHexagramCycle(secondary.number);
 
-  // Верхній блок має три різні функції: стан, конкретна дія, напрямок.
-  // Практична дія береться зі змінної лінії/ліній, щоб не дублювати загальну пораду гексаграми.
   const essence=firstSentence(primary.desc);
   const action=synthesizeAction(lines,primary,transition,context);
   const development=hasChanges?firstSentence(secondary.desc):'Окремого напрямку переходу немає: головним залишається поточний стан.';

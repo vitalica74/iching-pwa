@@ -1,4 +1,4 @@
-import {getHexagramCycle} from '../data/hexagram-cycles-01-10.js';
+import {getHexagramCycle} from '../data/hexagram-cycles.js';
 import {getClassicalInterpretations} from '../data/classical-sources.js';
 
 const $=selector=>document.querySelector(selector);
@@ -37,7 +37,6 @@ function organizeKnowledge(){
   const secondaryBody=$('#secondary-meaning')?.parentElement;
   const oldClassics=$('#classical-section');
 
-  // Класичний шар початкового стану більше не займає верхній рівень відповіді.
   if(primaryBody&&oldClassics&&oldClassics.parentElement!==primaryBody){
     let wrapper=$('#primary-classics-details');
     if(!wrapper){
@@ -52,7 +51,6 @@ function organizeKnowledge(){
     wrapper.appendChild(oldClassics);
   }
 
-  // Для результуючої гексаграми показуємо класичний погляд лише за запитом.
   if(secondaryBody){
     ensureClassicalDetails(secondaryBody,'secondary-classics-details','Класичне трактування нового стану');
   }
