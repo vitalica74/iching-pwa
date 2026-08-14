@@ -1,3 +1,4 @@
+import './install.js';
 import {getHexagramCycle} from '../data/hexagram-cycles.js';
 import {getClassicalInterpretations} from '../data/classical-sources.js';
 
