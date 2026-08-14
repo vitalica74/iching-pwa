@@ -1,12 +1,15 @@
-const CACHE='iching-pwa-v34';
+const CACHE='iching-pwa-v35';
 const OFFLINE_URL='./index.html';
 const ASSETS=[
   './','./index.html','./css/styles.css','./manifest.webmanifest','./icons/icon.svg',
   './js/app.js','./js/v41-ui.js','./js/random.js','./js/storage.js','./js/ui.js','./js/interpretation.js','./js/preferences.js',
-  './data/hexagrams.js','./data/profiles.js','./data/transitions.js','./data/classical-sources.js','./data/classical-lines.js','./data/classical-lines-v41.js',
-  './data/changing-lines.js','./data/changing-lines-01-04.js','./data/changing-lines-05-10.js','./data/changing-lines-11-16.js','./data/changing-lines-17-24.js','./data/changing-lines-25-32.js','./data/changing-lines-33-40.js','./data/changing-lines-41-48.js','./data/changing-lines-41-44.js','./data/changing-lines-45.js','./data/changing-lines-46.js','./data/changing-lines-47.js','./data/changing-lines-48.js','./data/changing-lines-49-56.js','./data/changing-lines-57-64.js','./data/changing-lines-57.js','./data/changing-lines-58-64.js',
-  './data/classical-lines-01-04.js','./data/classical-lines-05-10.js','./data/classical-lines-11-16.js','./data/classical-lines-17-24.js','./data/classical-lines-25-32.js','./data/classical-lines-33-40.js','./data/classical-lines-41-48.js','./data/classical-lines-41.js','./data/classical-lines-42-w.js','./data/classical-lines-42-s.js','./data/classical-lines-43.js','./data/classical-lines-44.js','./data/classical-lines-45.js','./data/classical-lines-46-w.js','./data/classical-lines-46-s.js','./data/classical-lines-47-w.js','./data/classical-lines-47-s.js','./data/classical-lines-48-w.js','./data/classical-lines-48-s.js','./data/classical-lines-49-56.js','./data/classical-lines-57-64.js','./data/classical-lines-57-60.js','./data/classical-lines-61-64.js',
-  './data/hexagram-cycles.js','./data/hexagram-cycles-01-10.js','./data/hexagram-cycles-11-16.js','./data/hexagram-cycles-17-24.js','./data/hexagram-cycles-25-32.js','./data/hexagram-cycles-33-40.js','./data/hexagram-cycles-41-48.js','./data/hexagram-cycles-49-56.js','./data/hexagram-cycles-57-64.js'
+  './data/hexagrams.js','./data/profiles.js','./data/transitions.js','./data/classical-sources.js',
+  './data/changing-lines.js',
+  './data/changing-lines-01-04.js','./data/changing-lines-05-10.js','./data/changing-lines-11-16.js','./data/changing-lines-17-24.js','./data/changing-lines-25-32.js','./data/changing-lines-33-40.js','./data/changing-lines-41-48.js','./data/changing-lines-49-56.js','./data/changing-lines-57-64.js',
+  './data/classical-lines.js',
+  './data/classical-lines-01-04.js','./data/classical-lines-05-10.js','./data/classical-lines-11-16.js','./data/classical-lines-17-24.js','./data/classical-lines-25-32.js','./data/classical-lines-33-40.js','./data/classical-lines-41-48.js','./data/classical-lines-49-56.js','./data/classical-lines-57-64.js',
+  './data/hexagram-cycles.js',
+  './data/hexagram-cycles-01-10.js','./data/hexagram-cycles-11-16.js','./data/hexagram-cycles-17-24.js','./data/hexagram-cycles-25-32.js','./data/hexagram-cycles-33-40.js','./data/hexagram-cycles-41-48.js','./data/hexagram-cycles-49-56.js','./data/hexagram-cycles-57-64.js'
 ];
 
 async function cacheAppShell(){
