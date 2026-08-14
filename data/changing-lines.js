@@ -32,3 +32,18 @@ export function getChangingLine(hexagram,position){
 }
 
 export function getChangingLines(hexagram,positions){return positions.map(position=>getChangingLine(hexagram,position));}
+
+export function validateChangingLinesCorpus(){
+  const required=['title','stage','meaning','advice'];
+  const missing=[];
+  const malformed=[];
+  for(let h=1;h<=64;h++){
+    for(let line=1;line<=6;line++){
+      const entry=LINES[h]?.[line];
+      if(!entry){missing.push(`${h}.${line}`);continue;}
+      const bad=required.filter(key=>typeof entry[key]!=='string'||!entry[key].trim());
+      if(bad.length)malformed.push({id:`${h}.${line}`,fields:bad});
+    }
+  }
+  return {ok:missing.length===0&&malformed.length===0,totalPossible:384,complete:384-missing.length,missing,malformed};
+}
