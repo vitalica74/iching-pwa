@@ -32,3 +32,22 @@ export function getClassicalLineInterpretations(hexagramNumber,lineNumber){
     shchutsky
   };
 }
+
+export function validateClassicalLineCorpus(){
+  const missingWilhelm=[];
+  const missingShchutsky=[];
+  for(let h=1;h<=64;h++){
+    for(let line=1;line<=6;line++){
+      if(typeof WILHELM[h]?.[line]!=='string'||!WILHELM[h][line].trim())missingWilhelm.push(`${h}.${line}`);
+      if(typeof SHCHUTSKY[h]?.[line]!=='string'||!SHCHUTSKY[h][line].trim())missingShchutsky.push(`${h}.${line}`);
+    }
+  }
+  return {
+    ok:missingWilhelm.length===0&&missingShchutsky.length===0,
+    totalPossible:384,
+    wilhelmComplete:384-missingWilhelm.length,
+    shchutskyComplete:384-missingShchutsky.length,
+    missingWilhelm,
+    missingShchutsky
+  };
+}
