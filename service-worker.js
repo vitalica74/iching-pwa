@@ -1,4 +1,4 @@
-const CACHE='iching-pwa-v36';
+const CACHE='iching-pwa-v41-20260814-1';
 const OFFLINE_URL='./index.html';
 const ASSETS=[
   './','./index.html','./css/styles.css','./manifest.webmanifest','./icons/icon.svg',
@@ -12,12 +12,16 @@ const ASSETS=[
   './data/hexagram-cycles-01-10.js','./data/hexagram-cycles-11-16.js','./data/hexagram-cycles-17-24.js','./data/hexagram-cycles-25-32.js','./data/hexagram-cycles-33-40.js','./data/hexagram-cycles-41-48.js','./data/hexagram-cycles-49-56.js','./data/hexagram-cycles-57-64.js'
 ];
 
+async function fetchFresh(request){
+  return fetch(new Request(request,{cache:'no-store'}));
+}
+
 async function cacheAppShell(){
   const cache=await caches.open(CACHE);
   await Promise.all(ASSETS.map(async asset=>{
     try{
-      const response=await fetch(new Request(asset,{cache:'reload'}));
-      if(response.ok)await cache.put(asset,response);
+      const response=await fetchFresh(asset);
+      if(response.ok)await cache.put(asset,response.clone());
       else console.warn('Не вдалося закешувати',asset,response.status);
     }catch(error){
       console.warn('Помилка кешування',asset,error);
@@ -25,23 +29,40 @@ async function cacheAppShell(){
   }));
 }
 
-self.addEventListener('install',event=>event.waitUntil(cacheAppShell().then(()=>self.skipWaiting())));
-self.addEventListener('activate',event=>event.waitUntil(
-  caches.keys()
-    .then(keys=>Promise.all(keys.filter(key=>key!==CACHE).map(key=>caches.delete(key))))
-    .then(()=>self.clients.claim())
-));
+self.addEventListener('install',event=>{
+  event.waitUntil(cacheAppShell().then(()=>self.skipWaiting()));
+});
+
+self.addEventListener('activate',event=>{
+  event.waitUntil(
+    caches.keys()
+      .then(keys=>Promise.all(keys.filter(key=>key!==CACHE).map(key=>caches.delete(key))))
+      .then(()=>self.clients.claim())
+  );
+});
+
 self.addEventListener('fetch',event=>{
   if(event.request.method!=='GET')return;
-  if(event.request.mode==='navigate'){
-    event.respondWith(fetch(event.request).then(async response=>{
-      if(response.ok)(await caches.open(CACHE)).put(OFFLINE_URL,response.clone());
+
+  const url=new URL(event.request.url);
+  if(url.origin!==self.location.origin)return;
+
+  event.respondWith((async()=>{
+    const cache=await caches.open(CACHE);
+    try{
+      // Network-first: when online, always prefer the newest deployed file.
+      const response=await fetchFresh(event.request);
+      if(response.ok)await cache.put(event.request,response.clone());
       return response;
-    }).catch(()=>caches.match(OFFLINE_URL)));
-    return;
-  }
-  event.respondWith(caches.match(event.request).then(cached=>cached||fetch(event.request).then(async response=>{
-    if(response.ok)(await caches.open(CACHE)).put(event.request,response.clone());
-    return response;
-  })));
+    }catch(error){
+      // Offline fallback keeps the PWA fully usable without touching localStorage/history.
+      const cached=await cache.match(event.request,{ignoreSearch:true});
+      if(cached)return cached;
+      if(event.request.mode==='navigate'){
+        const offline=await cache.match(OFFLINE_URL);
+        if(offline)return offline;
+      }
+      throw error;
+    }
+  })());
 });
