@@ -1,4 +1,4 @@
-import {getClassicalLineInterpretations} from './classical-lines-v41.js';
+import {getClassicalLineInterpretations} from './classical-lines.js';
 import {LINES_01_04} from './changing-lines-01-04.js';
 import {LINES_05_10} from './changing-lines-05-10.js';
 import {LINES_11_16} from './changing-lines-11-16.js';
