@@ -1,4 +1,4 @@
-const CACHE='iching-pwa-v41-20260817-autoreload-1';
+const CACHE='iching-pwa-v41-20260817-classical-note-1';
 const OFFLINE_URL='./index.html';
 const ASSETS=[
   './','./index.html','./css/styles.css','./css/library.css','./manifest.webmanifest','./icons/icon.svg',
@@ -45,10 +45,8 @@ self.addEventListener('activate',event=>{
 
 self.addEventListener('fetch',event=>{
   if(event.request.method!=='GET')return;
-
   const url=new URL(event.request.url);
   if(url.origin!==self.location.origin)return;
-
   event.respondWith((async()=>{
     const cache=await caches.open(CACHE);
     try{
