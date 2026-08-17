@@ -1,6 +1,7 @@
 import {CROSSROADS_01_04} from './crossroads-01-04.js';
+import {CROSSROADS_05_10} from './crossroads-05-10.js';
 
-const CROSSROADS={...CROSSROADS_01_04};
+const CROSSROADS={...CROSSROADS_01_04,...CROSSROADS_05_10};
 export const CROSSROADS_PRINCIPLE='Це лише частина шляхів, які видно звідси. Можна побачити інший і створити власний.';
 
 const unique=items=>[...new Set(items.filter(Boolean))];
@@ -24,8 +25,8 @@ export function buildCrossroads({primary,secondary,lines=[]}){
     };
   }
 
-  // Поки авторський корпус роздоріж для всіх 384 ліній не готовий,
-  // рушій усе одно може показати безпечний відкритий висновок із наявних даних.
+  // Тимчасовий fallback для гексаграм, авторське «Роздоріжжя» яких ще не написане.
+  // Після завершення корпусу №1–64 цей блок можна буде прибрати.
   const paths=unique([
     primary.advice?`Збережеш головний орієнтир теперішнього стану — ${primary.advice.charAt(0).toLocaleLowerCase('uk-UA')+primary.advice.slice(1)}`:'',
     lines[0]?.advice?`Підеш за найактивнішою зміною — ${lines[0].advice.charAt(0).toLocaleLowerCase('uk-UA')+lines[0].advice.slice(1)}`:'',
