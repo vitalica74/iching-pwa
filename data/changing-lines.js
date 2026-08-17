@@ -1,4 +1,5 @@
 import {getClassicalLineInterpretations} from './classical-lines.js';
+import {getCrossroads} from './crossroads.js';
 import {LINES_01_04} from './changing-lines-01-04.js';
 import {LINES_05_10} from './changing-lines-05-10.js';
 import {LINES_11_16} from './changing-lines-11-16.js';
@@ -28,7 +29,7 @@ export function getChangingLine(hexagram,position){
     meaning:`У гексаграмі «${hexagram.name}» найбільша рухливість припадає на ${fallback.focus}.`,
     advice:fallback.advice
   };
-  return {id:`${hexagram.number}.${position}`,hexagram:hexagram.number,position,...data,classical:getClassicalLineInterpretations(hexagram.number,position)};
+  return {id:`${hexagram.number}.${position}`,hexagram:hexagram.number,position,...data,crossroads:getCrossroads(hexagram.number,position),classical:getClassicalLineInterpretations(hexagram.number,position)};
 }
 
 export function getChangingLines(hexagram,positions){return positions.map(position=>getChangingLine(hexagram,position));}
