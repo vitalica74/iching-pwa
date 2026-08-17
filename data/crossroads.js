@@ -5,8 +5,10 @@ import {CROSSROADS_17_24} from './crossroads-17-24.js';
 import {CROSSROADS_25_32} from './crossroads-25-32.js';
 import {CROSSROADS_33_40} from './crossroads-33-40.js';
 import {CROSSROADS_41_48} from './crossroads-41-48.js';
+import {CROSSROADS_49_56} from './crossroads-49-56.js';
+import {CROSSROADS_57_64} from './crossroads-57-64.js';
 
-const CROSSROADS={...CROSSROADS_01_04,...CROSSROADS_05_10,...CROSSROADS_11_16,...CROSSROADS_17_24,...CROSSROADS_25_32,...CROSSROADS_33_40,...CROSSROADS_41_48};
+const CROSSROADS={...CROSSROADS_01_04,...CROSSROADS_05_10,...CROSSROADS_11_16,...CROSSROADS_17_24,...CROSSROADS_25_32,...CROSSROADS_33_40,...CROSSROADS_41_48,...CROSSROADS_49_56,...CROSSROADS_57_64};
 export const CROSSROADS_PRINCIPLE='Це лише частина шляхів, які видно звідси. Можна побачити інший і створити власний.';
 
 const unique=items=>[...new Set(items.filter(Boolean))];
@@ -23,8 +25,7 @@ export function buildCrossroads({primary,secondary,lines=[]}){
     return {title:'На роздоріжжі',paths:authored.slice(0,limit),open:CROSSROADS_PRINCIPLE,source:'authored'};
   }
 
-  // Тимчасовий fallback для гексаграм, авторське «Роздоріжжя» яких ще не написане.
-  // Після завершення корпусу №1–64 цей блок можна буде прибрати.
+  // Захисний fallback на випадок пошкоджених або неповних даних.
   const paths=unique([
     primary.advice?`Збережеш головний орієнтир теперішнього стану — ${primary.advice.charAt(0).toLocaleLowerCase('uk-UA')+primary.advice.slice(1)}`:'',
     lines[0]?.advice?`Підеш за найактивнішою зміною — ${lines[0].advice.charAt(0).toLocaleLowerCase('uk-UA')+lines[0].advice.slice(1)}`:'',
