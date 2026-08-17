@@ -1,10 +1,35 @@
 import {CROSSROADS_01_04} from './crossroads-01-04.js';
 
 const CROSSROADS={...CROSSROADS_01_04};
+export const CROSSROADS_PRINCIPLE='Це лише частина шляхів, які видно звідси. Можна побачити інший і створити власний.';
+
+const unique=items=>[...new Set(items.filter(Boolean))];
 
 export function getCrossroads(hexagramNumber,position){
   const paths=CROSSROADS[hexagramNumber]?.[position];
   return Array.isArray(paths)?paths.filter(Boolean):[];
 }
 
-export const CROSSROADS_PRINCIPLE='Текст показує лише частину шляхів, видимих із поточного стану. Користувач може побачити інший і створити власний.';
+export function buildCrossroads({primary,secondary,lines=[]}){
+  const authored=unique(lines.flatMap(line=>getCrossroads(primary.number,line.position)));
+  if(authored.length){
+    // Не вичерпуємо простір варіантів і не нав'язуємо кількість шляхів.
+    // Для підсумку беремо кілька найвиразніших напрямів із активних точок.
+    const limit=lines.length>1?4:3;
+    return {
+      title:'На роздоріжжі',
+      paths:authored.slice(0,limit),
+      open:CROSSROADS_PRINCIPLE,
+      source:'authored'
+    };
+  }
+
+  // Поки авторський корпус роздоріж для всіх 384 ліній не готовий,
+  // рушій усе одно може показати безпечний відкритий висновок із наявних даних.
+  const paths=unique([
+    primary.advice?`Збережеш головний орієнтир теперішнього стану — ${primary.advice.charAt(0).toLocaleLowerCase('uk-UA')+primary.advice.slice(1)}`:'',
+    lines[0]?.advice?`Підеш за найактивнішою зміною — ${lines[0].advice.charAt(0).toLocaleLowerCase('uk-UA')+lines[0].advice.slice(1)}`:'',
+    secondary?.advice&&secondary.number!==primary.number?`Спрямуєш рух до нового стану — ${secondary.advice.charAt(0).toLocaleLowerCase('uk-UA')+secondary.advice.slice(1)}`:''
+  ]);
+  return {title:'На роздоріжжі',paths,open:CROSSROADS_PRINCIPLE,source:'synthesized'};
+}
