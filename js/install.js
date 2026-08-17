@@ -4,18 +4,6 @@ function isStandalone(){
   return window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true;
 }
 
-// Якщо сторінка вже працює під старим service worker, а новий бере керування,
-// один раз перезавантажуємо застосунок. Під час першого встановлення reload не потрібен.
-if('serviceWorker' in navigator){
-  const hadController=Boolean(navigator.serviceWorker.controller);
-  let reloadingForUpdate=false;
-  navigator.serviceWorker.addEventListener('controllerchange',()=>{
-    if(!hadController||reloadingForUpdate)return;
-    reloadingForUpdate=true;
-    window.location.reload();
-  });
-}
-
 function ensureInstallCard(){
   let card=document.querySelector('#install-app-card');
   if(card)return card;
