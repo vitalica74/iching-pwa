@@ -1,4 +1,4 @@
-const CACHE='iching-pwa-v41-20260816-library-1';
+const CACHE='iching-pwa-v41-20260817-crossroads-1';
 const OFFLINE_URL='./index.html';
 const ASSETS=[
   './','./index.html','./css/styles.css','./css/library.css','./manifest.webmanifest','./icons/icon.svg',
@@ -9,7 +9,9 @@ const ASSETS=[
   './data/classical-lines.js',
   './data/classical-lines-01-04.js','./data/classical-lines-05-10.js','./data/classical-lines-11-16.js','./data/classical-lines-17-24.js','./data/classical-lines-25-32.js','./data/classical-lines-33-40.js','./data/classical-lines-41-48.js','./data/classical-lines-49-56.js','./data/classical-lines-57-64.js',
   './data/hexagram-cycles.js',
-  './data/hexagram-cycles-01-10.js','./data/hexagram-cycles-11-16.js','./data/hexagram-cycles-17-24.js','./data/hexagram-cycles-25-32.js','./data/hexagram-cycles-33-40.js','./data/hexagram-cycles-41-48.js','./data/hexagram-cycles-49-56.js','./data/hexagram-cycles-57-64.js'
+  './data/hexagram-cycles-01-10.js','./data/hexagram-cycles-11-16.js','./data/hexagram-cycles-17-24.js','./data/hexagram-cycles-25-32.js','./data/hexagram-cycles-33-40.js','./data/hexagram-cycles-41-48.js','./data/hexagram-cycles-49-56.js','./data/hexagram-cycles-57-64.js',
+  './data/crossroads.js',
+  './data/crossroads-01-04.js','./data/crossroads-05-10.js','./data/crossroads-11-16.js','./data/crossroads-17-24.js','./data/crossroads-25-32.js','./data/crossroads-33-40.js','./data/crossroads-41-48.js','./data/crossroads-49-56.js','./data/crossroads-57-64.js'
 ];
 
 async function fetchFresh(request){
