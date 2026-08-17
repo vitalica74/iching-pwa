@@ -26,17 +26,18 @@ export function buildInterpretation({primary,secondary,changingPositions,context
   const secondaryCycle=getHexagramCycle(secondary.number);
   const crossroads=buildCrossroads({primary,secondary,lines});
   const essence=firstSentence(primary.desc);
-  const action=synthesizeAction(lines,primary,transition,context);
+  const practical=synthesizeAction(lines,primary,transition,context);
   const development=hasChanges?firstSentence(secondary.desc):'Окремого напрямку переходу немає: головним залишається поточний стан.';
   const crossroadsText=[...crossroads.paths,crossroads.open].filter(Boolean).join(' ');
+  const finalGuidance=crossroadsText||practical;
 
   return {
-    schemaVersion:6,mode,
-    answer:{essence,action,development,crossroads:crossroadsText},
+    schemaVersion:7,mode,
+    answer:{essence,action:finalGuidance,development,crossroads:crossroadsText,practical},
     crossroads,
-    rationale:{lines:lineFocus,transition:hasChanges?'Поточна гексаграма задає стан, змінні лінії показують активні точки, результуюча гексаграма — напрямок розвитку. Роздоріжжя підсумовує читання, але не вичерпує можливостей.':'Без змінних ліній головним орієнтиром залишається поточна гексаграма. Роздоріжжя залишає простір для власного шляху.'},
+    rationale:{lines:lineFocus,transition:hasChanges?'Поточна гексаграма задає стан, змінні лінії показують активні точки, результуюча гексаграма — напрямок розвитку. Роздоріжжя завершує читання, показуючи кілька видимих шляхів без нав’язування єдиної відповіді.':'Без змінних ліній головним орієнтиром залишається поточна гексаграма. Роздоріжжя все одно залишає простір для власного шляху.'},
     primary:{meaning:ensurePeriod(primary.desc),caution:ensurePeriod(primary.caution),cycle:primaryCycle},lines,transition,
     secondary:{meaning:ensurePeriod(secondary.desc),cycle:secondaryCycle},classics,
-    conclusion:[essence,action,development,crossroadsText].filter(Boolean).join(' ')
+    conclusion:[essence,development,finalGuidance].filter(Boolean).join(' ')
   };
 }
