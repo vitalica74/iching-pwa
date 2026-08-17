@@ -2,8 +2,9 @@ import {CROSSROADS_01_04} from './crossroads-01-04.js';
 import {CROSSROADS_05_10} from './crossroads-05-10.js';
 import {CROSSROADS_11_16} from './crossroads-11-16.js';
 import {CROSSROADS_17_24} from './crossroads-17-24.js';
+import {CROSSROADS_25_32} from './crossroads-25-32.js';
 
-const CROSSROADS={...CROSSROADS_01_04,...CROSSROADS_05_10,...CROSSROADS_11_16,...CROSSROADS_17_24};
+const CROSSROADS={...CROSSROADS_01_04,...CROSSROADS_05_10,...CROSSROADS_11_16,...CROSSROADS_17_24,...CROSSROADS_25_32};
 export const CROSSROADS_PRINCIPLE='Це лише частина шляхів, які видно звідси. Можна побачити інший і створити власний.';
 
 const unique=items=>[...new Set(items.filter(Boolean))];
@@ -16,15 +17,8 @@ export function getCrossroads(hexagramNumber,position){
 export function buildCrossroads({primary,secondary,lines=[]}){
   const authored=unique(lines.flatMap(line=>getCrossroads(primary.number,line.position)));
   if(authored.length){
-    // Не вичерпуємо простір варіантів і не нав'язуємо кількість шляхів.
-    // Для підсумку беремо кілька найвиразніших напрямів із активних точок.
     const limit=lines.length>1?4:3;
-    return {
-      title:'На роздоріжжі',
-      paths:authored.slice(0,limit),
-      open:CROSSROADS_PRINCIPLE,
-      source:'authored'
-    };
+    return {title:'На роздоріжжі',paths:authored.slice(0,limit),open:CROSSROADS_PRINCIPLE,source:'authored'};
   }
 
   // Тимчасовий fallback для гексаграм, авторське «Роздоріжжя» яких ще не написане.
