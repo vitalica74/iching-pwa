@@ -1,4 +1,4 @@
-const CACHE='iching-pwa-v41-20260817-crossroads-1';
+const CACHE='iching-pwa-v41-20260817-autoreload-1';
 const OFFLINE_URL='./index.html';
 const ASSETS=[
   './','./index.html','./css/styles.css','./css/library.css','./manifest.webmanifest','./icons/icon.svg',
