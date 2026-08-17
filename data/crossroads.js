@@ -1,7 +1,8 @@
 import {CROSSROADS_01_04} from './crossroads-01-04.js';
 import {CROSSROADS_05_10} from './crossroads-05-10.js';
+import {CROSSROADS_11_16} from './crossroads-11-16.js';
 
-const CROSSROADS={...CROSSROADS_01_04,...CROSSROADS_05_10};
+const CROSSROADS={...CROSSROADS_01_04,...CROSSROADS_05_10,...CROSSROADS_11_16};
 export const CROSSROADS_PRINCIPLE='Це лише частина шляхів, які видно звідси. Можна побачити інший і створити власний.';
 
 const unique=items=>[...new Set(items.filter(Boolean))];
