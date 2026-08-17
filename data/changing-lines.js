@@ -1,5 +1,4 @@
 import {getClassicalLineInterpretations} from './classical-lines.js';
-import {getCrossroads} from './crossroads.js';
 import {LINES_01_04} from './changing-lines-01-04.js';
 import {LINES_05_10} from './changing-lines-05-10.js';
 import {LINES_11_16} from './changing-lines-11-16.js';
@@ -21,10 +20,6 @@ const POSITION={
 
 const LINES={...LINES_01_04,...LINES_05_10,...LINES_11_16,...LINES_17_24,...LINES_25_32,...LINES_33_40,...LINES_41_48,...LINES_49_56,...LINES_57_64};
 
-const crossroadsText=paths=>paths.length
-  ? `На роздоріжжі: ${paths.join(' ')} Це лише частина шляхів, які видно звідси; можна побачити інший і створити власний.`
-  : '';
-
 export function getChangingLine(hexagram,position){
   const fallback=POSITION[position]||POSITION[1];
   const data=LINES[hexagram.number]?.[position]||{
@@ -33,17 +28,7 @@ export function getChangingLine(hexagram,position){
     meaning:`У гексаграмі «${hexagram.name}» найбільша рухливість припадає на ${fallback.focus}.`,
     advice:fallback.advice
   };
-  const crossroads=getCrossroads(hexagram.number,position);
-  return {
-    id:`${hexagram.number}.${position}`,
-    hexagram:hexagram.number,
-    position,
-    ...data,
-    originalAdvice:data.advice,
-    advice:crossroads.length?crossroadsText(crossroads):data.advice,
-    crossroads,
-    classical:getClassicalLineInterpretations(hexagram.number,position)
-  };
+  return {id:`${hexagram.number}.${position}`,hexagram:hexagram.number,position,...data,classical:getClassicalLineInterpretations(hexagram.number,position)};
 }
 
 export function getChangingLines(hexagram,positions){return positions.map(position=>getChangingLine(hexagram,position));}
