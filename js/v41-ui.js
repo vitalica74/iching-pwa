@@ -21,6 +21,8 @@ function ensureStyles(){
     .crossroads-choice{font-weight:750}.crossroads-test-button{margin-top:.8rem;width:100%}.crossroads-test-button[aria-expanded="true"]{opacity:.82}.reading-depth-note{margin:.8rem 0 0;opacity:.72;font-size:.92em}
     #answer-action.crossroads-formatted{display:block}.crossroads-main-path{display:block;position:relative;padding-left:1.15rem;margin:.65rem 0}.crossroads-main-path::before{content:'•';position:absolute;left:0;font-weight:800}
     .crossroads-main-open{display:block;margin-top:.85rem;font-style:italic;opacity:.82}
+    .changing-line-context{display:flex;align-items:center;gap:.65rem;margin:0 0 .7rem;color:#f59e0b;font-weight:700;line-height:1.25}
+    .changing-line-badge{display:inline-flex;align-items:center;justify-content:center;flex:0 0 2rem;width:2rem;height:2rem;border-radius:50%;background:#f59e0b;color:#111827;font-size:1rem;font-weight:850}
   `;document.head.appendChild(style);
 }
 function appendCrossroadsPath(container,path){const split=String(path).split(' — ');if(split.length<2){container.textContent=path;return}const choice=document.createElement('strong');choice.className='crossroads-choice';choice.textContent=split.shift();container.append(choice,document.createTextNode(` — ${split.join(' — ')}`))}
@@ -28,8 +30,30 @@ function formatMainCrossroads(){const action=$('#answer-action');if(!action||act
 function ensureClassicalDetails(parent,id,title){let details=document.querySelector(`#${id}`);if(details)return details;details=document.createElement('details');details.id=id;details.className='line-classical-details state-classical-details';const summary=document.createElement('summary');summary.textContent=title;const body=document.createElement('div');body.className='line-classical-body';const wh=document.createElement('h5');wh.textContent='Ріхард Вільгельм';const wp=document.createElement('p');wp.dataset.role='wilhelm';const sh=document.createElement('h5');sh.textContent='Юліан Шуцький';const sp=document.createElement('p');sp.dataset.role='shchutsky';const note=document.createElement('small');note.textContent='Стислі авторські перекази, не цитати.';body.append(wh,wp,sh,sp,note);details.append(summary,body);parent?.appendChild(details);return details}
 function organizeKnowledge(){const primaryBody=$('#primary-meaning')?.parentElement;const secondaryBody=$('#secondary-meaning')?.parentElement;const oldClassics=$('#classical-section');if(primaryBody&&oldClassics&&!primaryBody.contains(oldClassics)){let wrapper=$('#primary-classics-details');if(!wrapper){wrapper=document.createElement('details');wrapper.id='primary-classics-details';wrapper.className='line-classical-details state-classical-details';const summary=document.createElement('summary');summary.textContent='Класичні трактування стану';wrapper.appendChild(summary);primaryBody.appendChild(wrapper)}if(!wrapper.contains(oldClassics))wrapper.appendChild(oldClassics)}if(secondaryBody)ensureClassicalDetails(secondaryBody,'secondary-classics-details','Класичне трактування нового стану')}
 function organizeConclusion(){const steps=$('#answer-result .answer-steps');const crossroads=$('#answer-action')?.closest('.answer-step');const development=$('#answer-development')?.closest('.answer-step');if(!steps||!crossroads||!development)return;setIfChanged(development.querySelector('h3'),'Напрямок шляху');setIfChanged(development.querySelector('.step-number'),'1');setIfChanged(crossroads.querySelector('h3'),'На роздоріжжі');setIfChanged(crossroads.querySelector('.step-number'),'2');const children=[...steps.children];if(children[0]!==development||children[1]!==crossroads)steps.append(development,crossroads);formatMainCrossroads();let note=$('#reading-depth-note');if(!note){note=document.createElement('p');note.id='reading-depth-note';note.className='reading-depth-note';note.textContent='Напрямок уже видно. Деталі нижче відкривайте лише тоді, коли хочеться зрозуміти шлях глибше.';steps.insertAdjacentElement('afterend',note)}}
+function decorateChangingLineCards(primaryNumber){
+  if(!primaryNumber)return;
+  const primary=getHexagramData(primaryNumber);
+  if(!primary)return;
+  const variants=Array.from({length:6},(_,index)=>getChangingLine(primary,index+1));
+  document.querySelectorAll('#changing-lines-list .changing-line-card').forEach(card=>{
+    if(card.querySelector('.changing-line-context'))return;
+    const title=card.querySelector('strong');
+    const meaning=card.querySelector('p');
+    const titleText=title?.textContent?.trim()||'';
+    const meaningText=meaning?.textContent?.trim()||'';
+    const line=variants.find(item=>item.title===titleText&&item.meaning===meaningText)
+      ||variants.find(item=>item.title===titleText)
+      ||variants.find(item=>item.meaning===meaningText);
+    if(!line)return;
+    const context=document.createElement('div');context.className='changing-line-context';
+    const badge=document.createElement('span');badge.className='changing-line-badge';badge.textContent=String(line.position);badge.setAttribute('aria-hidden','true');
+    const label=document.createElement('span');label.textContent=`Лінія ${line.position} — стосується вашого питання`;
+    context.append(badge,label);
+    card.insertBefore(context,card.firstChild);
+  });
+}
 function renderSecondaryClassics(number){const details=$('#secondary-classics-details');if(!details)return;const classics=number?getClassicalInterpretations(number):null;setIfChanged(details.querySelector('[data-role="wilhelm"]'),classics?.wilhelm||'Класичний текст для цієї гексаграми ще не додано.');setIfChanged(details.querySelector('[data-role="shchutsky"]'),classics?.shchutsky||'Класичний текст для цієї гексаграми ще не додано.')}
-function renderProgressiveDisclosure(){ensureStyles();organizeKnowledge();organizeConclusion();const primaryNumber=numberFrom($('#primary-details-title')?.textContent);const secondaryNumber=numberFrom($('#secondary-details-title')?.textContent);setIfChanged($('#primary-cycle'),formatCycle(getHexagramCycle(primaryNumber)));setIfChanged($('#secondary-cycle'),formatCycle(getHexagramCycle(secondaryNumber)));renderSecondaryClassics(secondaryNumber)}
+function renderProgressiveDisclosure(){ensureStyles();organizeKnowledge();organizeConclusion();const primaryNumber=numberFrom($('#primary-details-title')?.textContent);const secondaryNumber=numberFrom($('#secondary-details-title')?.textContent);decorateChangingLineCards(primaryNumber);setIfChanged($('#primary-cycle'),formatCycle(getHexagramCycle(primaryNumber)));setIfChanged($('#secondary-cycle'),formatCycle(getHexagramCycle(secondaryNumber)));renderSecondaryClassics(secondaryNumber)}
 function libraryLinesFromFigure(){return [...document.querySelectorAll('#library-detail .library-hexagram .library-line')].map(line=>({type:line.classList.contains('yang')?'yang':'yin',changing:false}))}
 function resultingHexagramForLibraryLine(position){const lines=libraryLinesFromFigure();if(lines.length!==6)return null;const changed=lines.map((line,index)=>index===position-1?{...line,type:line.type==='yang'?'yin':'yang'}:line);const number=canonicalHexagramNumber(changed);return number?getHexagramData(number):null}
 function removeOtherLibraryCrossroads(exceptBody=null){document.querySelectorAll('#library-detail .crossroads-preview').forEach(preview=>{if(!exceptBody||preview.parentElement!==exceptBody)preview.remove()});document.querySelectorAll('#library-detail .crossroads-test-button').forEach(button=>{if(!exceptBody||button.parentElement!==exceptBody){button.setAttribute('aria-expanded','false');button.textContent='Побачити, куди веде ця зміна'}})}
