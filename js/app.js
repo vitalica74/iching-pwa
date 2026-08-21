@@ -5,9 +5,9 @@ import {buildInterpretation} from './interpretation.js';
 import {loadPreferences,savePreferences} from './preferences.js';
 import {renderLines,showToast,switchTab} from './ui.js';
 
-const APP_VERSION='4.0.0';
-const LIBRARY_VERSION='1.3.0';
-const ENGINE_VERSION='4.0.0';
+const APP_VERSION='1.0.0';
+const LIBRARY_VERSION='1.0.0';
+const ENGINE_VERSION='1.0.0';
 const $=selector=>document.querySelector(selector);
 const clone=value=>globalThis.structuredClone?structuredClone(value):JSON.parse(JSON.stringify(value));
 const state={lines:[],history:[],preferences:loadPreferences(),busy:false,lastTap:0,tapTimer:0,openedHistoryItem:null,displayingSnapshot:false};
