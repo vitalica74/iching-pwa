@@ -1,12 +1,13 @@
-import {getHexagramGuide} from '../data/hexagram-guides-01-10.js';
+import {getHexagramGuide as getGuide01to10} from '../data/hexagram-guides-01-10.js';
+import {getHexagramGuide11to16} from '../data/hexagram-guides-11-16.js';
 
+const getHexagramGuide=number=>getGuide01to10(number)||getHexagramGuide11to16(number);
 const $=selector=>document.querySelector(selector);
 const numberFrom=text=>{const match=String(text??'').match(/№\s*(\d+)/);return match?Number(match[1]):null};
 const circled=['①','②','③','④','⑤','⑥'];
 
 function ensureStyles(){if($('#hexagram-guide-styles'))return;const style=document.createElement('style');style.id='hexagram-guide-styles';style.textContent=`
 .hexagram-guide{margin-top:.75rem}.guide-section{margin:1rem 0}.guide-section>h4{margin:.2rem 0 .55rem}.guide-short{font-weight:650;line-height:1.55}.guide-more,.guide-stage{margin:.55rem 0;border-top:1px solid rgba(148,163,184,.25);padding-top:.55rem}.guide-more summary,.guide-stage summary{cursor:pointer;font-weight:650}.guide-more p,.guide-stage p{margin:.55rem 0 0;line-height:1.6}.guide-flow{line-height:1.85;font-weight:700}.guide-stage summary{display:flex;gap:.45rem;align-items:flex-start}.guide-stage-number{font-weight:850;min-width:1.5rem}.guide-classics-marker{margin-top:1.1rem}
-/* Only top-level knowledge sections show +/- in their headers. Nested details use the native disclosure marker. */
 .knowledge-sections>details.knowledge-details>summary::after{content:'+'}.knowledge-sections>details.knowledge-details[open]>summary::after{content:'−'}
 .details-body .guide-more>summary::after,.details-body .guide-stage>summary::after,.hexagram-guide .guide-more>summary::after,.hexagram-guide .guide-stage>summary::after{content:none!important}
 `;document.head.appendChild(style)}
