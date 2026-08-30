@@ -1,9 +1,9 @@
-const CACHE='iching-pwa-v1.0.5';
+const CACHE='iching-pwa-v1.0.6';
 const OFFLINE_URL='./index.html';
 const ASSETS=[
   './','./index.html','./css/styles.css','./css/library.css','./manifest.webmanifest','./icons/icon.svg',
   './js/app.js','./js/reading-ui.js','./js/guide-ui.js','./js/library-guide-ui.js','./js/library.js','./js/install.js','./js/random.js','./js/storage.js','./js/ui.js','./js/interpretation.js','./js/preferences.js',
-  './data/hexagrams.js','./data/profiles.js','./data/transitions.js','./data/classical-sources.js','./data/hexagram-guides-01-10.js',
+  './data/hexagrams.js','./data/profiles.js','./data/transitions.js','./data/classical-sources.js','./data/hexagram-guides-01-10.js','./data/hexagram-guides-11-16.js',
   './data/changing-lines.js',
   './data/changing-lines-01-04.js','./data/changing-lines-05-10.js','./data/changing-lines-11-16.js','./data/changing-lines-17-24.js','./data/changing-lines-25-32.js','./data/changing-lines-33-40.js','./data/changing-lines-41-48.js','./data/changing-lines-49-56.js','./data/changing-lines-57-64.js',
   './data/classical-lines.js',
@@ -13,7 +13,6 @@ const ASSETS=[
   './data/crossroads.js',
   './data/crossroads-01-04.js','./data/crossroads-05-10.js','./data/crossroads-11-16.js','./data/crossroads-17-24.js','./data/crossroads-25-32.js','./data/crossroads-33-40.js','./data/crossroads-41-48.js','./data/crossroads-49-56.js','./data/crossroads-57-64.js'
 ];
-
 async function fetchFresh(request){return fetch(new Request(request,{cache:'no-store'}))}
 async function cacheAppShell(){const cache=await caches.open(CACHE);await Promise.all(ASSETS.map(async asset=>{try{const response=await fetchFresh(asset);if(response.ok)await cache.put(asset,response.clone());else console.warn('Не вдалося закешувати',asset,response.status)}catch(error){console.warn('Помилка кешування',asset,error)}}))}
 self.addEventListener('install',event=>{event.waitUntil(cacheAppShell().then(()=>self.skipWaiting()))});
