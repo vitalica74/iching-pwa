@@ -1,9 +1,9 @@
-const CACHE='iching-pwa-v1.0.8';
+const CACHE='iching-pwa-v1.0.9';
 const OFFLINE_URL='./index.html';
 const ASSETS=[
   './','./index.html','./css/styles.css','./css/library.css','./manifest.webmanifest','./icons/icon.svg',
   './js/app.js','./js/reading-ui.js','./js/guide-ui.js','./js/library-guide-ui.js','./js/library.js','./js/install.js','./js/random.js','./js/storage.js','./js/ui.js','./js/interpretation.js','./js/preferences.js',
-  './data/hexagrams.js','./data/profiles.js','./data/transitions.js','./data/classical-sources.js','./data/hexagram-guides-01-10.js','./data/hexagram-guides-11-16.js','./data/hexagram-guides-17-24.js','./data/hexagram-guides-25-32.js',
+  './data/hexagrams.js','./data/profiles.js','./data/transitions.js','./data/classical-sources.js','./data/hexagram-guides-01-10.js','./data/hexagram-guides-11-16.js','./data/hexagram-guides-17-24.js','./data/hexagram-guides-25-32.js','./data/hexagram-guides-33-40.js',
   './data/changing-lines.js',
   './data/changing-lines-01-04.js','./data/changing-lines-05-10.js','./data/changing-lines-11-16.js','./data/changing-lines-17-24.js','./data/changing-lines-25-32.js','./data/changing-lines-33-40.js','./data/changing-lines-41-48.js','./data/changing-lines-49-56.js','./data/changing-lines-57-64.js',
   './data/classical-lines.js',
