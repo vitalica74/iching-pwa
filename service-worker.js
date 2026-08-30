@@ -1,4 +1,4 @@
-const CACHE='iching-pwa-v1.0.2';
+const CACHE='iching-pwa-v1.0.3';
 const OFFLINE_URL='./index.html';
 const ASSETS=[
   './','./index.html','./css/styles.css','./css/library.css','./manifest.webmanifest','./icons/icon.svg',
