@@ -1,8 +1,9 @@
 import {getHexagramGuide as getGuide01to10} from '../data/hexagram-guides-01-10.js';
 import {getHexagramGuide11to16} from '../data/hexagram-guides-11-16.js';
 import {getHexagramGuide17to24} from '../data/hexagram-guides-17-24.js';
+import {getHexagramGuide25to32} from '../data/hexagram-guides-25-32.js';
 
-const getHexagramGuide=number=>getGuide01to10(number)||getHexagramGuide11to16(number)||getHexagramGuide17to24(number);
+const getHexagramGuide=number=>getGuide01to10(number)||getHexagramGuide11to16(number)||getHexagramGuide17to24(number)||getHexagramGuide25to32(number);
 const $=selector=>document.querySelector(selector);
 const numberFrom=text=>{const match=String(text??'').match(/№\s*(\d+)/);return match?Number(match[1]):null};
 const circled=['①','②','③','④','⑤','⑥'];
