@@ -5,9 +5,10 @@ import {getHexagramGuide25to32} from '../data/hexagram-guides-25-32.js';
 import {getHexagramGuide33to40} from '../data/hexagram-guides-33-40.js';
 import {getHexagramGuide41to48} from '../data/hexagram-guides-41-48.js';
 import {getHexagramGuide49to56} from '../data/hexagram-guides-49-56.js';
+import {getHexagramGuide57to64} from '../data/hexagram-guides-57-64.js';
 import {getHexagramData} from '../data/hexagrams.js';
 import {getChangingLine} from '../data/changing-lines.js';
-const getHexagramGuide=number=>getGuide01to10(number)||getHexagramGuide11to16(number)||getHexagramGuide17to24(number)||getHexagramGuide25to32(number)||getHexagramGuide33to40(number)||getHexagramGuide41to48(number)||getHexagramGuide49to56(number);
+const getHexagramGuide=number=>getGuide01to10(number)||getHexagramGuide11to16(number)||getHexagramGuide17to24(number)||getHexagramGuide25to32(number)||getHexagramGuide33to40(number)||getHexagramGuide41to48(number)||getHexagramGuide49to56(number)||getHexagramGuide57to64(number);
 const $=selector=>document.querySelector(selector);const circled=['①','②','③','④','⑤','⑥'];
 function guideSection(title,item){return `<section class="library-summary-block"><h3>${title}</h3><p><strong>Коротко:</strong> ${item.short}</p><details class="knowledge-details"><summary>Розгорнути пояснення</summary><div class="details-body"><p>${item.long}</p></div></details></section>`}
 function lineClassics(line){const classical=line?.classical||{};return `<details class="library-classics"><summary>Класичні трактування</summary><div><h5>Ріхард Вільгельм</h5><p>${classical.wilhelm||'Текст ще доповнюється.'}</p><h5>Юліан Шуцький</h5><p>${classical.shchutsky||'Текст ще доповнюється.'}</p><small class="library-note">Стислі авторські перекази, не цитати.</small></div></details>`}
