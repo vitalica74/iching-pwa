@@ -4,6 +4,7 @@ import {CONTEXTS} from '../data/profiles.js';
 import {getClassicalInterpretations} from '../data/classical-sources.js';
 import {getHexagramCycle} from '../data/hexagram-cycles.js';
 import {buildCrossroads} from '../data/crossroads.js';
+import {getStructuralContext,structuralReadingNote} from '../data/structural-context.js';
 
 const ensurePeriod=text=>{const value=String(text??'').trim();return value&&!/[.!?…]$/.test(value)?`${value}.`:value};
 const lowerFirst=text=>{const value=String(text??'').trim();return value?value[0].toLocaleLowerCase('uk-UA')+value.slice(1):value};
@@ -21,6 +22,7 @@ export function buildInterpretation({primary,secondary,changingPositions,context
   const hasChanges=changingPositions.length>0;
   const transition=exact?{...exact,exact:true}:fallbackTransition(primary,secondary,hasChanges);
   const lineFocus=summarizeLineFocus(lines);
+  const structural=getStructuralContext(primary.number,changingPositions);
   const classics=getClassicalInterpretations(primary.number);
   const primaryCycle=getHexagramCycle(primary.number);
   const secondaryCycle=getHexagramCycle(secondary.number);
@@ -30,12 +32,17 @@ export function buildInterpretation({primary,secondary,changingPositions,context
   const development=hasChanges?firstSentence(secondary.desc):'Окремого напрямку переходу немає: головним залишається поточний стан.';
   const crossroadsText=[...crossroads.paths,crossroads.open].filter(Boolean).join(' ');
   const finalGuidance=crossroadsText||practical;
+  const structuralText=structural.available?`${structural.summary} ${structuralReadingNote()}`:'';
 
   return {
-    schemaVersion:7,mode,
+    schemaVersion:8,mode,
     answer:{essence,action:finalGuidance,development,crossroads:crossroadsText,practical},
     crossroads,
-    rationale:{lines:lineFocus,transition:hasChanges?'Поточна гексаграма задає стан, змінні лінії показують активні точки, результуюча гексаграма — напрямок розвитку. Роздоріжжя завершує читання, показуючи кілька видимих шляхів без нав’язування єдиної відповіді.':'Без змінних ліній головним орієнтиром залишається поточна гексаграма. Роздоріжжя все одно залишає простір для власного шляху.'},
+    rationale:{
+      lines:[lineFocus,structuralText].filter(Boolean).join(' '),
+      transition:hasChanges?'Поточна гексаграма задає стан, змінні лінії показують активні точки, результуюча гексаграма — напрямок розвитку. Роздоріжжя завершує читання, показуючи кілька видимих шляхів без нав’язування єдиної відповіді.':'Без змінних ліній головним орієнтиром залишається поточна гексаграма. Роздоріжжя все одно залишає простір для власного шляху.'
+    },
+    structure:structural,
     primary:{meaning:ensurePeriod(primary.desc),caution:ensurePeriod(primary.caution),cycle:primaryCycle},lines,transition,
     secondary:{meaning:ensurePeriod(secondary.desc),cycle:secondaryCycle},classics,
     conclusion:[essence,development,finalGuidance].filter(Boolean).join(' ')
