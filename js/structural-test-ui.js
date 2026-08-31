@@ -4,12 +4,9 @@ import {getChangingLine} from '../data/changing-lines.js';
 
 const $=selector=>document.querySelector(selector);
 const numberFrom=text=>{const match=String(text??'').match(/№\s*(\d+)/);return match?Number(match[1]):null};
-const isFirefoxAndroid=/Android/i.test(navigator.userAgent)&&/Firefox\//i.test(navigator.userAgent);
-let footerFrame=0;
 
 function ensureTestStyles(){
   if(document.querySelector('#structural-test-styles'))return;
-  if(isFirefoxAndroid)document.documentElement.classList.add('firefox-android');
   const style=document.createElement('style');
   style.id='structural-test-styles';
   style.textContent=`
@@ -27,20 +24,6 @@ function ensureTestStyles(){
       border-radius:18px 18px 0 0 !important;
       border-bottom:0 !important;
       padding-bottom:max(8px,env(safe-area-inset-bottom)) !important;
-      backface-visibility:hidden;
-      -webkit-backface-visibility:hidden;
-      will-change:transform;
-      contain:layout paint;
-    }
-    .firefox-android .nav-bar{
-      position:absolute !important;
-      top:0;
-      bottom:auto !important;
-      backface-visibility:visible !important;
-      -webkit-backface-visibility:visible !important;
-      will-change:auto !important;
-      contain:none !important;
-      transform:none !important;
     }
     .structural-test-badge{margin:.4rem 0 .8rem;padding:.5rem .7rem;border:1px dashed rgba(245,158,11,.55);border-radius:10px;color:#f59e0b;font-size:.78rem;text-align:center}
     .structural-line-note{margin:.7rem 0 .1rem;padding:.75rem .8rem;border-left:3px solid #f59e0b;border-radius:0 10px 10px 0;background:rgba(245,158,11,.07);font-size:.86rem;line-height:1.5}
@@ -48,37 +31,6 @@ function ensureTestStyles(){
     @media(max-width:699px){body{padding-bottom:108px !important}.nav-bar{padding-bottom:max(7px,env(safe-area-inset-bottom)) !important}}
   `;
   document.head.appendChild(style);
-}
-
-function syncFirefoxFooter(){
-  if(!isFirefoxAndroid)return;
-  const nav=$('.nav-bar');
-  if(!nav)return;
-  const vv=window.visualViewport;
-  const viewportTop=window.scrollY+(vv?.offsetTop||0);
-  const viewportHeight=vv?.height||window.innerHeight;
-  const top=viewportTop+viewportHeight-nav.offsetHeight;
-  nav.style.top=`${Math.max(0,Math.round(top))}px`;
-}
-
-function scheduleFirefoxFooter(){
-  if(!isFirefoxAndroid||footerFrame)return;
-  footerFrame=requestAnimationFrame(()=>{
-    footerFrame=0;
-    syncFirefoxFooter();
-  });
-}
-
-function installFirefoxFooterTracking(){
-  if(!isFirefoxAndroid)return;
-  scheduleFirefoxFooter();
-  window.addEventListener('scroll',scheduleFirefoxFooter,{passive:true});
-  window.addEventListener('resize',scheduleFirefoxFooter,{passive:true});
-  window.addEventListener('orientationchange',scheduleFirefoxFooter,{passive:true});
-  if(window.visualViewport){
-    window.visualViewport.addEventListener('scroll',scheduleFirefoxFooter,{passive:true});
-    window.visualViewport.addEventListener('resize',scheduleFirefoxFooter,{passive:true});
-  }
 }
 
 function stageMeaning(item){
@@ -151,9 +103,8 @@ function decorateChangingLines(){
   });
 }
 
-function render(){ensureTestStyles();markExperiment();decorateChangingLines();scheduleFirefoxFooter()}
+function render(){ensureTestStyles();markExperiment();decorateChangingLines()}
 ensureTestStyles();
-installFirefoxFooterTracking();
 render();
 const target=$('#answer-result');
 if(target){let scheduled=false;new MutationObserver(()=>{if(scheduled)return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;render()})}).observe(target,{subtree:true,childList:true,characterData:true})}
