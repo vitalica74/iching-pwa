@@ -21,29 +21,36 @@ function ensureTestStyles(){
   document.head.appendChild(style);
 }
 
-function stageLead(position){
-  switch(position){
-    case 1:return 'Ця зміна лише зароджується, тому її напрям важливіший за швидкість дії.';
-    case 2:return 'Зміна ще визріває всередині ситуації, і зараз важливо надати їй ясної та врівноваженої форми.';
-    case 3:return 'Ситуація дійшла до межі між внутрішнім визріванням і зовнішньою дією.';
-    case 4:return 'Зміна вже переходить із внутрішнього наміру в зовнішню дію.';
-    case 5:return 'Зміна досягла зрілої, помітної фази, де особливо важливо зберегти центр і міру.';
-    case 6:return 'Процес підійшов до своєї межі, тому тепер важливо відрізнити завершення від надмірного продовження.';
-    default:return '';
-  }
+const stageLead={
+  1:'Ця зміна лише зароджується: спершу варто визначити її напрям, а не поспішати з дією.',
+  2:'Зміна ще визріває всередині ситуації: зараз важливіше впорядкувати основу, ніж домагатися зовнішнього ефекту.',
+  3:'Ситуація дійшла до межі між внутрішнім визріванням і зовнішньою дією.',
+  4:'Зміна вже виходить назовні: намір переходить у взаємодію з реальними людьми й обставинами.',
+  5:'Зміна досягла зрілої й помітної фази: її напрям уже має бути зрозумілим у зовнішньому прояві.',
+  6:'Процес підійшов до межі: тепер важливо зрозуміти, що слід завершити, а що вже стало надмірним.'
+};
+
+function hasAny(text,words){
+  const value=String(text||'').toLowerCase();
+  return words.some(word=>value.includes(word));
 }
 
-function structuralNuance(structural,item){
-  const parts=[];
-  if(!item.appropriate&&item.correspondence)parts.push('У цій точці є певна внутрішня суперечність, але структура показує відгук з іншого боку ситуації.');
-  else if(!item.appropriate&&!item.correspondence)parts.push('У цій точці є внутрішня суперечність, тому рішення потребує додаткової перевірки перед дією.');
-  else if(item.appropriate&&item.correspondence)parts.push('Будова ситуації підтримує цей напрям, якщо не форсувати його понад міру.');
-  else if(item.appropriate&&!item.correspondence)parts.push('Позиція дає внутрішню опору, хоча прямий відгук з іншої частини ситуації неочевидний.');
+function chooseNuance(structural,item,baseText){
+  const minority=structural.minority===item.type;
+  const balanceAlready=hasAny(baseText,['мір','рівнов','баланс','середин','центр']);
+  const supportAlready=hasAny(baseText,['підтрим','опор','довір','підтвердж']);
+  const cautionAlready=hasAny(baseText,['не посп','перевір','обереж','ризик','форс']);
 
-  if(structural.minority===item.type&&item.central)parts.push('Саме ця лінія має особливу вагу: центральне положення поєднується тут із рідкісною для гексаграми якістю.');
-  else if(structural.minority===item.type)parts.push('Її якість вирізняється в будові гексаграми, тому ця точка може бути одним із головних акцентів зміни.');
-  else if(item.central)parts.push('Центральне положення підсилює потребу в рівновазі та мірі.');
-  return parts.join(' ');
+  // Один головний структурний акцент замість переліку всіх ознак.
+  if(minority&&item.central&&!balanceAlready)return 'Ця лінія має особливу вагу в ситуації, а її центральне положення робить головною умовою збереження міри.';
+  if(minority)return 'Її якість вирізняється серед інших ліній, тому саме ця точка може виявитися одним із головних акцентів зміни.';
+  if(item.central&&!balanceAlready)return 'Центральне положення підказує не посилювати крайнощі, а втримати міру.';
+
+  if(!item.appropriate&&!item.correspondence&&!cautionAlready)return 'У цій точці є внутрішня суперечність і немає очевидного відгуку з іншого боку ситуації, тому перед дією потрібна додаткова перевірка.';
+  if(!item.appropriate&&item.correspondence)return 'Попри внутрішню суперечність, тут є відгук з іншого боку ситуації; напругу можна використати як поштовх до переходу.';
+  if(item.appropriate&&item.correspondence&&!supportAlready)return 'Цей напрям має природну опору в будові ситуації, тож рухатися далі можна без зайвого форсування.';
+  if(item.appropriate&&!item.correspondence&&!supportAlready)return 'Напрям має внутрішню опору, хоча прямий відгук з іншої частини ситуації поки неочевидний.';
+  return '';
 }
 
 function integratedText(primaryNumber,line){
@@ -52,8 +59,10 @@ function integratedText(primaryNumber,line){
   if(!item)return null;
   const meaning=String(line.meaning||'').trim();
   const advice=String(line.advice||'').trim();
-  const explanation=[stageLead(item.position),meaning,structuralNuance(structural,item)].filter(Boolean).join(' ');
-  return {explanation,advice};
+  const lead=stageLead[item.position]||'';
+  const base=[lead,meaning].filter(Boolean).join(' ');
+  const nuance=chooseNuance(structural,item,`${base} ${advice}`);
+  return {explanation:[base,nuance].filter(Boolean).join(' '),advice};
 }
 
 function markExperiment(){
@@ -63,7 +72,7 @@ function markExperiment(){
     const badge=document.createElement('p');
     badge.id='structural-test-badge';
     badge.className='structural-test-badge';
-    badge.textContent='Експеримент: зміст лінії + структура';
+    badge.textContent='Експеримент: пріоритетний структурний синтез';
     result.querySelector('.progress')?.insertAdjacentElement('afterend',badge);
   }
 }
