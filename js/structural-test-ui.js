@@ -37,19 +37,19 @@ function hasAny(text,words){
 
 function chooseNuance(structural,item,baseText){
   const minority=structural.minority===item.type;
-  const balanceAlready=hasAny(baseText,['мір','рівнов','баланс','середин','центр']);
+  const balanceAlready=hasAny(baseText,['мір','рівнов','баланс','середин','центр','крайн']);
   const supportAlready=hasAny(baseText,['підтрим','опор','довір','підтвердж']);
   const cautionAlready=hasAny(baseText,['не посп','перевір','обереж','ризик','форс']);
 
-  // Один головний структурний акцент замість переліку всіх ознак.
-  if(minority&&item.central&&!balanceAlready)return 'Ця лінія має особливу вагу в ситуації, а її центральне положення робить головною умовою збереження міри.';
-  if(minority)return 'Її якість вирізняється серед інших ліній, тому саме ця точка може виявитися одним із головних акцентів зміни.';
-  if(item.central&&!balanceAlready)return 'Центральне положення підказує не посилювати крайнощі, а втримати міру.';
+  // Структурні правила залишаються всередині алгоритму; назовні виходить лише їхній людський сенс.
+  if(minority&&item.central&&!balanceAlready)return 'Саме тут зосереджена одна з головних тем зміни: важливо втримати ясний напрям без крайнощів.';
+  if(minority)return 'Саме ця точка може виявитися одним із головних акцентів зміни, тому її не варто вважати другорядною.';
+  if(item.central&&!balanceAlready)return 'Тепер важливо не посилювати крайнощі, а втримати ясний напрям і міру.';
 
-  if(!item.appropriate&&!item.correspondence&&!cautionAlready)return 'У цій точці є внутрішня суперечність і немає очевидного відгуку з іншого боку ситуації, тому перед дією потрібна додаткова перевірка.';
-  if(!item.appropriate&&item.correspondence)return 'Попри внутрішню суперечність, тут є відгук з іншого боку ситуації; напругу можна використати як поштовх до переходу.';
-  if(item.appropriate&&item.correspondence&&!supportAlready)return 'Цей напрям має природну опору в будові ситуації, тож рухатися далі можна без зайвого форсування.';
-  if(item.appropriate&&!item.correspondence&&!supportAlready)return 'Напрям має внутрішню опору, хоча прямий відгук з іншої частини ситуації поки неочевидний.';
+  if(!item.appropriate&&!item.correspondence&&!cautionAlready)return 'Тут є внутрішня суперечність, а підтримка з іншого боку ситуації поки неочевидна, тому перед дією потрібна додаткова перевірка.';
+  if(!item.appropriate&&item.correspondence)return 'Попри внутрішню суперечність, з іншого боку ситуації є відгук; цю напругу можна використати для переходу.';
+  if(item.appropriate&&item.correspondence&&!supportAlready)return 'Напрям має достатню опору, тож рухатися далі можна без зайвого форсування.';
+  if(item.appropriate&&!item.correspondence&&!supportAlready)return 'Напрям має внутрішню опору, хоча підтримка з іншого боку ситуації поки неочевидна.';
   return '';
 }
 
@@ -72,7 +72,7 @@ function markExperiment(){
     const badge=document.createElement('p');
     badge.id='structural-test-badge';
     badge.className='structural-test-badge';
-    badge.textContent='Експеримент: пріоритетний структурний синтез';
+    badge.textContent='Експеримент: природне структурне читання';
     result.querySelector('.progress')?.insertAdjacentElement('afterend',badge);
   }
 }
