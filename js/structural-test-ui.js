@@ -4,9 +4,11 @@ import {getChangingLine} from '../data/changing-lines.js';
 
 const $=selector=>document.querySelector(selector);
 const numberFrom=text=>{const match=String(text??'').match(/№\s*(\d+)/);return match?Number(match[1]):null};
+const isFirefoxAndroid=/Android/i.test(navigator.userAgent)&&/Firefox\//i.test(navigator.userAgent);
 
 function ensureTestStyles(){
   if(document.querySelector('#structural-test-styles'))return;
+  if(isFirefoxAndroid)document.documentElement.classList.add('firefox-android');
   const style=document.createElement('style');
   style.id='structural-test-styles';
   style.textContent=`
@@ -28,6 +30,13 @@ function ensureTestStyles(){
       -webkit-backface-visibility:hidden;
       will-change:transform;
       contain:layout paint;
+    }
+    .firefox-android .nav-bar{
+      backface-visibility:visible !important;
+      -webkit-backface-visibility:visible !important;
+      will-change:auto !important;
+      contain:none !important;
+      transform:none !important;
     }
     .structural-test-badge{margin:.4rem 0 .8rem;padding:.5rem .7rem;border:1px dashed rgba(245,158,11,.55);border-radius:10px;color:#f59e0b;font-size:.78rem;text-align:center}
     .structural-line-note{margin:.7rem 0 .1rem;padding:.75rem .8rem;border-left:3px solid #f59e0b;border-radius:0 10px 10px 0;background:rgba(245,158,11,.07);font-size:.86rem;line-height:1.5}
@@ -51,7 +60,7 @@ function stageMeaning(item){
 
 function relationMeaning(item){
   if(item.appropriate&&item.correspondence)return 'Внутрішня будова підтримує цей рух, тож його можна розвивати без зайвого форсування.';
-  if(item.appropriate&&!item.correspondence)return 'Позиція сама по собі стійка, але зовнішньої підтримки може бракувати; краще спертися на власну ясність.';
+  if(item.appropriate&&!item.correspondence)return 'Позиція сама по собі стійка, але зв’язок з іншою частиною ситуації неочевидний; краще спертися на власну ясність.';
   if(!item.appropriate&&item.correspondence)return 'Є внутрішня суперечність, але водночас існує відгук з іншого боку ситуації; напругу можна використати для переходу.';
   return 'У цій точці є внутрішнє напруження й мало природної опори, тому поспіх лише посилить суперечність.';
 }
