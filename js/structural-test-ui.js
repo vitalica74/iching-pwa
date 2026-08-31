@@ -5,6 +5,7 @@ import {getChangingLine} from '../data/changing-lines.js';
 const $=selector=>document.querySelector(selector);
 const numberFrom=text=>{const match=String(text??'').match(/№\s*(\d+)/);return match?Number(match[1]):null};
 const isFirefoxAndroid=/Android/i.test(navigator.userAgent)&&/Firefox\//i.test(navigator.userAgent);
+let footerFrame=0;
 
 function ensureTestStyles(){
   if(document.querySelector('#structural-test-styles'))return;
@@ -32,6 +33,9 @@ function ensureTestStyles(){
       contain:layout paint;
     }
     .firefox-android .nav-bar{
+      position:absolute !important;
+      top:0;
+      bottom:auto !important;
       backface-visibility:visible !important;
       -webkit-backface-visibility:visible !important;
       will-change:auto !important;
@@ -44,6 +48,37 @@ function ensureTestStyles(){
     @media(max-width:699px){body{padding-bottom:108px !important}.nav-bar{padding-bottom:max(7px,env(safe-area-inset-bottom)) !important}}
   `;
   document.head.appendChild(style);
+}
+
+function syncFirefoxFooter(){
+  if(!isFirefoxAndroid)return;
+  const nav=$('.nav-bar');
+  if(!nav)return;
+  const vv=window.visualViewport;
+  const viewportTop=window.scrollY+(vv?.offsetTop||0);
+  const viewportHeight=vv?.height||window.innerHeight;
+  const top=viewportTop+viewportHeight-nav.offsetHeight;
+  nav.style.top=`${Math.max(0,Math.round(top))}px`;
+}
+
+function scheduleFirefoxFooter(){
+  if(!isFirefoxAndroid||footerFrame)return;
+  footerFrame=requestAnimationFrame(()=>{
+    footerFrame=0;
+    syncFirefoxFooter();
+  });
+}
+
+function installFirefoxFooterTracking(){
+  if(!isFirefoxAndroid)return;
+  scheduleFirefoxFooter();
+  window.addEventListener('scroll',scheduleFirefoxFooter,{passive:true});
+  window.addEventListener('resize',scheduleFirefoxFooter,{passive:true});
+  window.addEventListener('orientationchange',scheduleFirefoxFooter,{passive:true});
+  if(window.visualViewport){
+    window.visualViewport.addEventListener('scroll',scheduleFirefoxFooter,{passive:true});
+    window.visualViewport.addEventListener('resize',scheduleFirefoxFooter,{passive:true});
+  }
 }
 
 function stageMeaning(item){
@@ -116,8 +151,9 @@ function decorateChangingLines(){
   });
 }
 
-function render(){ensureTestStyles();markExperiment();decorateChangingLines()}
+function render(){ensureTestStyles();markExperiment();decorateChangingLines();scheduleFirefoxFooter()}
 ensureTestStyles();
+installFirefoxFooterTracking();
 render();
 const target=$('#answer-result');
 if(target){let scheduled=false;new MutationObserver(()=>{if(scheduled)return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;render()})}).observe(target,{subtree:true,childList:true,characterData:true})}
