@@ -12,58 +12,48 @@ function ensureTestStyles(){
   style.textContent=`
     html{min-height:100%;background:#0f172a}
     body{min-height:100%;padding-bottom:112px !important}
-    .nav-bar{
-      position:fixed !important;
-      left:0 !important;
-      right:0 !important;
-      bottom:0 !important;
-      transform:none !important;
-      margin:0 auto !important;
-      width:100% !important;
-      max-width:520px !important;
-      border-radius:18px 18px 0 0 !important;
-      border-bottom:0 !important;
-      padding-bottom:max(8px,env(safe-area-inset-bottom)) !important;
-    }
+    .nav-bar{position:fixed !important;left:0 !important;right:0 !important;bottom:0 !important;transform:none !important;margin:0 auto !important;width:100% !important;max-width:520px !important;border-radius:18px 18px 0 0 !important;border-bottom:0 !important;padding-bottom:max(8px,env(safe-area-inset-bottom)) !important}
     .structural-test-badge{margin:.4rem 0 .8rem;padding:.5rem .7rem;border:1px dashed rgba(245,158,11,.55);border-radius:10px;color:#f59e0b;font-size:.78rem;text-align:center}
-    .structural-line-note{margin:.7rem 0 .1rem;padding:.75rem .8rem;border-left:3px solid #f59e0b;border-radius:0 10px 10px 0;background:rgba(245,158,11,.07);font-size:.86rem;line-height:1.5}
-    .structural-line-note strong{display:block;margin-bottom:.25rem;color:#f59e0b}
+    .integrated-reading{margin:.55rem 0 .25rem;font-size:1rem;line-height:1.55}
+    .integrated-reading + .integrated-reading{margin-top:.7rem}
     @media(max-width:699px){body{padding-bottom:108px !important}.nav-bar{padding-bottom:max(7px,env(safe-area-inset-bottom)) !important}}
   `;
   document.head.appendChild(style);
 }
 
-function stageMeaning(item){
-  switch(item.position){
-    case 1:return 'Зміна лише зароджується, тому важливіше відчути напрямок, ніж поспішати з дією.';
-    case 2:return 'Зміна визріває всередині ситуації; зараз корисніше вирівняти основу й знайти внутрішню міру.';
-    case 3:return 'Ситуація підійшла до межі внутрішнього етапу: наступний крок уже торкатиметься зовнішніх обставин.';
-    case 4:return 'Зміна переходить у зовнішню дію, тому намір уже потрібно узгоджувати з людьми та обставинами.';
-    case 5:return 'Ситуація проявляється зріло й помітно; головне — зберегти міру та не втратити центр.';
-    case 6:return 'Процес наближається до межі, тому важливо вчасно завершити або відпустити надмірне.';
+function stageLead(position){
+  switch(position){
+    case 1:return 'Ця зміна лише зароджується, тому її напрям важливіший за швидкість дії.';
+    case 2:return 'Зміна ще визріває всередині ситуації, і зараз важливо надати їй ясної та врівноваженої форми.';
+    case 3:return 'Ситуація дійшла до межі між внутрішнім визріванням і зовнішньою дією.';
+    case 4:return 'Зміна вже переходить із внутрішнього наміру в зовнішню дію.';
+    case 5:return 'Зміна досягла зрілої, помітної фази, де особливо важливо зберегти центр і міру.';
+    case 6:return 'Процес підійшов до своєї межі, тому тепер важливо відрізнити завершення від надмірного продовження.';
     default:return '';
   }
 }
 
-function relationMeaning(item){
-  if(item.appropriate&&item.correspondence)return 'Внутрішня будова підтримує цей рух, тож його можна розвивати без зайвого форсування.';
-  if(item.appropriate&&!item.correspondence)return 'Позиція сама по собі стійка, але зв’язок з іншою частиною ситуації неочевидний; краще спертися на власну ясність.';
-  if(!item.appropriate&&item.correspondence)return 'Є внутрішня суперечність, але водночас існує відгук з іншого боку ситуації; напругу можна використати для переходу.';
-  return 'У цій точці є внутрішнє напруження й мало природної опори, тому поспіх лише посилить суперечність.';
+function structuralNuance(structural,item){
+  const parts=[];
+  if(!item.appropriate&&item.correspondence)parts.push('У цій точці є певна внутрішня суперечність, але структура показує відгук з іншого боку ситуації.');
+  else if(!item.appropriate&&!item.correspondence)parts.push('У цій точці є внутрішня суперечність, тому рішення потребує додаткової перевірки перед дією.');
+  else if(item.appropriate&&item.correspondence)parts.push('Будова ситуації підтримує цей напрям, якщо не форсувати його понад міру.');
+  else if(item.appropriate&&!item.correspondence)parts.push('Позиція дає внутрішню опору, хоча прямий відгук з іншої частини ситуації неочевидний.');
+
+  if(structural.minority===item.type&&item.central)parts.push('Саме ця лінія має особливу вагу: центральне положення поєднується тут із рідкісною для гексаграми якістю.');
+  else if(structural.minority===item.type)parts.push('Її якість вирізняється в будові гексаграми, тому ця точка може бути одним із головних акцентів зміни.');
+  else if(item.central)parts.push('Центральне положення підсилює потребу в рівновазі та мірі.');
+  return parts.join(' ');
 }
 
-function emphasisMeaning(structural,item){
-  if(structural.minority===item.type&&item.central)return 'Ця лінія особливо помітна: вона поєднує центральну позицію з рідкісною для цієї гексаграми якістю.';
-  if(structural.minority===item.type)return 'Її якість перебуває в меншості, тому саме тут може бути прихований важливий акцент ситуації.';
-  if(item.central)return 'Центральна позиція підсилює тему рівноваги й міри.';
-  return '';
-}
-
-function structuralSentence(primaryNumber,position){
-  const structural=getStructuralContext(primaryNumber,[position]);
+function integratedText(primaryNumber,line){
+  const structural=getStructuralContext(primaryNumber,[line.position]);
   const item=structural?.lines?.[0];
-  if(!item)return '';
-  return [stageMeaning(item),relationMeaning(item),emphasisMeaning(structural,item)].filter(Boolean).join(' ');
+  if(!item)return null;
+  const meaning=String(line.meaning||'').trim();
+  const advice=String(line.advice||'').trim();
+  const explanation=[stageLead(item.position),meaning,structuralNuance(structural,item)].filter(Boolean).join(' ');
+  return {explanation,advice};
 }
 
 function markExperiment(){
@@ -73,7 +63,7 @@ function markExperiment(){
     const badge=document.createElement('p');
     badge.id='structural-test-badge';
     badge.className='structural-test-badge';
-    badge.textContent='Експеримент: структурне читання увімкнено';
+    badge.textContent='Експеримент: зміст лінії + структура';
     result.querySelector('.progress')?.insertAdjacentElement('afterend',badge);
   }
 }
@@ -83,23 +73,27 @@ function decorateChangingLines(){
   if(!primaryNumber)return;
   const primary=getHexagramData(primaryNumber);
   const variants=Array.from({length:6},(_,i)=>getChangingLine(primary,i+1));
+
   document.querySelectorAll('#changing-lines-list .changing-line-card').forEach(card=>{
-    const old=card.querySelector('.structural-line-note');
+    card.querySelector('.structural-line-note')?.remove();
     const title=card.querySelector('strong')?.textContent?.trim()||'';
-    const meaning=card.querySelector('p')?.textContent?.trim()||'';
-    const line=variants.find(item=>item.title===title&&item.meaning===meaning)||variants.find(item=>item.title===title)||variants.find(item=>item.meaning===meaning);
+    const paragraphs=Array.from(card.querySelectorAll(':scope > p'));
+    const originalMeaning=paragraphs[0]?.dataset.originalText||paragraphs[0]?.textContent?.trim()||'';
+    const line=variants.find(item=>item.title===title&&item.meaning===originalMeaning)||variants.find(item=>item.title===title)||variants.find(item=>item.meaning===originalMeaning);
     if(!line)return;
-    const text=structuralSentence(primaryNumber,line.position);
-    if(!text)return;
-    if(old){const body=old.querySelector('span');if(body&&body.textContent!==text)body.textContent=text;return}
-    const note=document.createElement('div');
-    note.className='structural-line-note';
-    const heading=document.createElement('strong');
-    heading.textContent='Структура цієї лінії';
-    const body=document.createElement('span');
-    body.textContent=text;
-    note.append(heading,body);
-    card.appendChild(note);
+    const integrated=integratedText(primaryNumber,line);
+    if(!integrated)return;
+
+    if(paragraphs[0]){
+      if(!paragraphs[0].dataset.originalText)paragraphs[0].dataset.originalText=paragraphs[0].textContent.trim();
+      paragraphs[0].classList.add('integrated-reading');
+      paragraphs[0].textContent=integrated.explanation;
+    }
+    if(paragraphs[1]&&integrated.advice){
+      if(!paragraphs[1].dataset.originalText)paragraphs[1].dataset.originalText=paragraphs[1].textContent.trim();
+      paragraphs[1].classList.add('integrated-reading');
+      paragraphs[1].textContent=integrated.advice;
+    }
   });
 }
 
