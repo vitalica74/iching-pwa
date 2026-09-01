@@ -35,14 +35,31 @@ function hasAny(text,words){
   return words.some(word=>value.includes(word));
 }
 
+function minorityMeaning(structural,item,baseText){
+  if(structural.minority!==item.type)return '';
+  const decisive=structural.yangCount===1||structural.yinCount===1;
+
+  if(item.type==='yang'){
+    if(hasAny(baseText,['дія','рух','рішуч','ініціат','імпульс','актив']))return '';
+    return decisive
+      ? 'На тлі загальної стриманості саме тут виникає виразний імпульс до дії; важливо спрямувати його точно, а не розпорошувати.'
+      : 'На тлі більш стриманої ситуації тут помітніша потреба діяти; краще дати їй чіткий напрям, ніж просто посилювати натиск.';
+  }
+
+  if(hasAny(baseText,['зупин','стрим','прийнят','почек','тиша','відступ','пауза','м’як','мяк']))return '';
+  return decisive
+    ? 'На тлі загальної активності саме тут особливо потрібна здатність зупинитися, прийняти обмеження й не відповідати силою на силу.'
+    : 'На тлі активного розвитку тут важливіше зберегти сприйнятливість і вчасно послабити натиск.';
+}
+
 function chooseNuance(structural,item,baseText){
-  const minority=structural.minority===item.type;
   const balanceAlready=hasAny(baseText,['мір','рівнов','баланс','середин','центр','крайн']);
   const supportAlready=hasAny(baseText,['підтрим','опор','довір','підтвердж']);
   const cautionAlready=hasAny(baseText,['не посп','перевір','обереж','ризик','форс']);
+  const minority=minorityMeaning(structural,item,baseText);
 
-  if(minority&&item.central&&!balanceAlready)return 'Саме тут зосереджена одна з головних тем зміни: важливо втримати ясний напрям без крайнощів.';
-  if(minority)return 'Саме ця точка може виявитися одним із головних акцентів зміни, тому її не варто вважати другорядною.';
+  // Рідкісна якість отримує змістовний наслідок, а не технічне пояснення її "ваги".
+  if(minority)return minority;
   if(item.central&&!balanceAlready)return 'Тепер важливо не посилювати крайнощі, а втримати ясний напрям і міру.';
 
   if(!item.appropriate&&!item.correspondence&&!cautionAlready)return 'Тут є внутрішня суперечність, а підтримка з іншого боку ситуації поки неочевидна, тому перед дією потрібна додаткова перевірка.';
@@ -62,6 +79,46 @@ function integratedText(primaryNumber,line){
   const base=[lead,meaning].filter(Boolean).join(' ');
   const nuance=chooseNuance(structural,item,`${base} ${advice}`);
   return {explanation:[base,nuance].filter(Boolean).join(' '),advice};
+}
+
+function auditStructuralReadings(){
+  const issues=[];
+  let checked=0;
+  const forbidden=['центральне положення','центральна позиція','будова гексаграми','структурн','відповідність','ян ','інь ','позиція'];
+  const repeatedConcepts=[
+    ['міра',['мір','рівнов','баланс','крайн']],
+    ['підтримка',['підтрим','опор','відгук']],
+    ['перевірка',['перевір','підтвердж']],
+    ['натиск',['натиск','форс','тиск']]
+  ];
+
+  for(let h=1;h<=64;h++){
+    const hexagram=getHexagramData(h);
+    if(!hexagram){issues.push({id:String(h),type:'missing-hexagram'});continue;}
+    for(let position=1;position<=6;position++){
+      checked++;
+      const line=getChangingLine(hexagram,position);
+      const result=integratedText(h,line);
+      if(!result?.explanation){issues.push({id:`${h}.${position}`,type:'missing-reading'});continue;}
+      const text=`${result.explanation} ${result.advice}`.toLowerCase();
+      const technical=forbidden.filter(term=>text.includes(term));
+      if(technical.length)issues.push({id:`${h}.${position}`,type:'technical-language',terms:technical});
+
+      repeatedConcepts.forEach(([name,stems])=>{
+        const hits=stems.reduce((sum,stem)=>sum+(text.split(stem).length-1),0);
+        if(hits>=3)issues.push({id:`${h}.${position}`,type:'repeated-concept',concept:name,hits});
+      });
+
+      const sentences=result.explanation.split(/[.!?]+/).map(value=>value.trim()).filter(Boolean);
+      if(sentences.length!==new Set(sentences.map(value=>value.toLowerCase())).size)issues.push({id:`${h}.${position}`,type:'duplicate-sentence'});
+      if(result.explanation.length>520)issues.push({id:`${h}.${position}`,type:'too-long',chars:result.explanation.length});
+    }
+  }
+
+  const report={ok:issues.length===0,checked,total:384,issues};
+  globalThis.__structuralAudit=report;
+  console.info(`[structural-audit] ${checked}/384 readings checked; ${issues.length} issue(s).`,report);
+  return report;
 }
 
 function markExperiment(){
@@ -120,6 +177,7 @@ function decorateChangingLines(){
 
 function render(){ensureTestStyles();markExperiment();decorateChangingLines()}
 ensureTestStyles();
+auditStructuralReadings();
 render();
 const target=$('#answer-result');
 if(target){let scheduled=false;new MutationObserver(()=>{if(scheduled)return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;render()})}).observe(target,{subtree:true,childList:true,characterData:true})}
