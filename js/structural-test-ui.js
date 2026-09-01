@@ -76,13 +76,12 @@ function structuralShade(structural,item,meaning,advice){
   const signals=semanticSignals(source);
   const minority=structural.minority===item.type;
 
-  // Структура тут не додає окремої поради. Вона лише може дати короткий
-  // відтінок, якщо цей відтінок уже узгоджується зі змістом самої лінії.
-  if(item.central&&signals.balance)return 'Тут тема міри справді є центральною для самого змісту лінії.';
-  if(item.correspondence&&signals.support)return 'Наявний зв’язок тут є частиною самого шляху зміни.';
-  if(!item.appropriate&&signals.verify)return 'Потреба перевірки тут випливає з напруги самої ситуації.';
-  if(minority&&item.type==='yang'&&signals.act)return 'Імпульс до дії тут виразніший, ніж загальний фон ситуації.';
-  if(minority&&item.type==='yin'&&(signals.wait||signals.ease))return 'Потреба послабити натиск тут виразніша, ніж загальний фон ситуації.';
+  // Жодних пояснень роботи алгоритму. Додаємо лише короткий змістовний відтінок,
+  // який уже присутній у самій лінії й не змінює її напрям.
+  if(item.correspondence&&signals.support)return 'Зв’язок з іншою стороною ситуації може стати реальною опорою для цього кроку.';
+  if(!item.appropriate&&signals.verify)return 'Тому додаткова перевірка перед дією тут справді доречна.';
+  if(minority&&item.type==='yang'&&signals.act)return 'Імпульс до дії тут варто зберегти зосередженим і точним.';
+  if(minority&&item.type==='yin'&&(signals.wait||signals.ease))return 'Стриманість тут важливіша за спробу посилити натиск.';
   return '';
 }
 
@@ -94,8 +93,6 @@ function integratedText(primaryNumber,line){
   const advice=String(line.advice||'').trim();
   const base=blendStage(item.position,meaning);
   const shade=structuralShade(structural,item,meaning,advice);
-
-  // Навіть коли shade порожній, позиція вже вплинула на формулювання через blendStage.
   return {explanation:[base,shade].filter(Boolean).join(' '),advice,hasShade:Boolean(shade)};
 }
 
@@ -104,7 +101,11 @@ function auditStructuralReadings(){
   let checked=0;
   let withShade=0;
   let stageOnly=0;
-  const forbidden=['центральне положення','центральна позиція','будова гексаграми','структурн','відповідність','ян ','інь ','позиція'];
+  const forbidden=[
+    'центральне положення','центральна позиція','будова гексаграми','структурн','відповідність','ян ','інь ','позиція',
+    'тема міри','для самого змісту лінії','частиною самого шляху зміни','випливає з напруги самої ситуації',
+    'виразніший, ніж загальний фон','виразніша, ніж загальний фон','самого змісту','самої лінії'
+  ];
 
   for(let h=1;h<=64;h++){
     const hexagram=getHexagramData(h);
@@ -117,7 +118,7 @@ function auditStructuralReadings(){
       if(result.hasShade)withShade++;else stageOnly++;
       const text=`${result.explanation} ${result.advice}`.toLowerCase();
       const technical=forbidden.filter(term=>text.includes(term));
-      if(technical.length)issues.push({id:`${h}.${position}`,type:'technical-language',terms:technical});
+      if(technical.length)issues.push({id:`${h}.${position}`,type:'meta-or-technical-language',terms:technical});
       if(result.explanation.length>460)issues.push({id:`${h}.${position}`,type:'too-long',chars:result.explanation.length});
     }
   }
