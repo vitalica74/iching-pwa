@@ -21,14 +21,42 @@ function ensureTestStyles(){
   document.head.appendChild(style);
 }
 
-const stageLead={
-  1:'Ця зміна лише зароджується: спершу варто визначити її напрям, а не поспішати з дією.',
-  2:'Зміна ще визріває всередині ситуації: зараз важливіше впорядкувати основу, ніж домагатися зовнішнього ефекту.',
-  3:'Ситуація дійшла до межі між внутрішнім визріванням і зовнішньою дією.',
-  4:'Зміна вже виходить назовні: намір переходить у взаємодію з реальними людьми й обставинами.',
-  5:'Зміна досягла зрілої й помітної фази: її напрям уже має бути зрозумілим у зовнішньому прояві.',
-  6:'Процес підійшов до межі: тепер важливо зрозуміти, що слід завершити, а що вже стало надмірним.'
-};
+function lowerFirst(text){
+  const value=String(text||'').trim();
+  if(!value)return '';
+  return value.charAt(0).toLocaleLowerCase('uk-UA')+value.slice(1);
+}
+
+function blendStage(position,meaning){
+  const text=String(meaning||'').trim();
+  if(!text)return '';
+  const lower=lowerFirst(text);
+  const conditional=/^(коли|якщо|поки|щойно|коли-небудь)\b/i.test(text);
+
+  // Етап більше не подається окремою службовою фразою.
+  // Він стає граматичною рамкою самого змісту лінії.
+  if(conditional){
+    const shortLead={
+      1:'На початку процес ще не набрав сили.',
+      2:'На внутрішньому етапі основа ще формується.',
+      3:'Тут внутрішнє визрівання вже торкається зовнішньої дії.',
+      4:'Тут зміна вже входить у реальну взаємодію.',
+      5:'На зрілому етапі наслідки вже стають помітними.',
+      6:'На межі завершення особливо видно, що стало надмірним.'
+    };
+    return `${shortLead[position]||''} ${text}`.trim();
+  }
+
+  const prefix={
+    1:'На самому початку ',
+    2:'Поки ситуація ще визріває, ',
+    3:'На межі між внутрішнім визріванням і зовнішньою дією ',
+    4:'Коли зміна виходить назовні, ',
+    5:'У зрілій і вже помітній фазі ',
+    6:'На межі завершення '
+  }[position]||'';
+  return `${prefix}${lower}`.trim();
+}
 
 function hasAny(text,words){
   const value=String(text||'').toLowerCase();
@@ -56,16 +84,12 @@ function semanticSignals(text){
 function minorityMeaning(structural,item,sourceText,signals){
   if(structural.minority!==item.type)return '';
   const decisive=structural.yangCount===1||structural.yinCount===1;
-
   if(item.type==='yang'){
-    // Якщо лінія вже говорить про дію/напрям/імпульс, рідкісний ян не додає нового сенсу.
     if(signals.initiative||signals.direction||signals.press)return '';
     return decisive
       ? 'На тлі загальної стриманості тут з’являється виразний імпульс до дії; його краще спрямувати точно, а не розпорошувати.'
       : 'На тлі більш стриманої ситуації тут помітніша потреба діяти; краще надати їй чіткого напряму, ніж просто посилювати натиск.';
   }
-
-  // Якщо лінія вже радить стриманість/послаблення, рідкісний інь також нічого нового не додає.
   if(signals.wait||signals.ease||signals.restraint)return '';
   return decisive
     ? 'На тлі загальної активності тут особливо важливо вчасно послабити натиск і не відповідати силою на силу.'
@@ -74,35 +98,21 @@ function minorityMeaning(structural,item,sourceText,signals){
 
 function chooseNuance(structural,item,sourceText){
   const signals=semanticSignals(sourceText);
-
-  // Головне правило: структурне уточнення необов’язкове.
-  // Воно з’являється тільки тоді, коли додає новий практичний сенс до meaning + advice.
   const minority=minorityMeaning(structural,item,sourceText,signals);
   if(minority)return minority;
-
-  if(item.central&&!signals.balance&&!signals.direction){
-    return 'Тепер важливо не посилювати крайнощі, а втримати ясний напрям і міру.';
-  }
-
+  if(item.central&&!signals.balance&&!signals.direction)return 'Тепер важливо не посилювати крайнощі, а втримати ясний напрям і міру.';
   if(!item.appropriate&&!item.correspondence){
     if(signals.verify||signals.support||signals.wait||signals.ease)return '';
     return 'Перед дією варто ще раз перевірити, чи обраний напрям справді відповідає ситуації.';
   }
-
   if(!item.appropriate&&item.correspondence){
-    // Сам факт підтримки вже є в тексті — не пояснюємо його вдруге.
-    if(signals.support)return '';
-    // Якщо лінія вже описує суперечність, напругу, тиск або потребу послабити його,
-    // структурний коментар також не потрібен.
-    if(signals.press||signals.ease||signals.verify)return '';
+    if(signals.support||signals.press||signals.ease||signals.verify)return '';
     return 'Відгук з іншого боку ситуації може допомогти пройти цей перехід без зайвого тиску.';
   }
-
   if(item.appropriate&&item.correspondence){
     if(signals.support||signals.direction||signals.continue||signals.act)return '';
     return 'Є достатня опора, щоб рухатися далі без зайвого форсування.';
   }
-
   if(item.appropriate&&!item.correspondence){
     if(signals.support||signals.direction||signals.verify||signals.isolation)return '';
     return 'Внутрішньої опори достатньо, тому зовнішнього підтвердження не потрібно шукати будь-якою ціною.';
@@ -116,8 +126,7 @@ function integratedText(primaryNumber,line){
   if(!item)return null;
   const meaning=String(line.meaning||'').trim();
   const advice=String(line.advice||'').trim();
-  const lead=stageLead[item.position]||'';
-  const base=[lead,meaning].filter(Boolean).join(' ');
+  const base=blendStage(item.position,meaning);
   const sourceText=`${meaning} ${advice}`;
   const nuance=chooseNuance(structural,item,sourceText);
   return {explanation:[base,nuance].filter(Boolean).join(' '),advice,hasNuance:Boolean(nuance)};
@@ -129,13 +138,7 @@ function auditStructuralReadings(){
   let withNuance=0;
   let stageOnly=0;
   const forbidden=['центральне положення','центральна позиція','будова гексаграми','структурн','відповідність','ян ','інь ','позиція'];
-  const repeatedConcepts=[
-    ['міра',['мір','рівнов','баланс','крайн']],
-    ['підтримка',['підтрим','опор','відгук']],
-    ['перевірка',['перевір','підтвердж']],
-    ['натиск',['натиск','форс','тиск']]
-  ];
-
+  const repeatedConcepts=[['міра',['мір','рівнов','баланс','крайн']],['підтримка',['підтрим','опор','відгук']],['перевірка',['перевір','підтвердж']],['натиск',['натиск','форс','тиск']]];
   for(let h=1;h<=64;h++){
     const hexagram=getHexagramData(h);
     if(!hexagram){issues.push({id:String(h),type:'missing-hexagram'});continue;}
@@ -151,24 +154,17 @@ function auditStructuralReadings(){
       const text=`${result.explanation} ${result.advice}`.toLowerCase();
       const technical=forbidden.filter(term=>text.includes(term));
       if(technical.length)issues.push({id:`${h}.${position}`,type:'technical-language',terms:technical});
-
       if(sourceSignals.support&&generatedSignals.isolation)issues.push({id:`${h}.${position}`,type:'semantic-conflict',conflict:'support-vs-isolation'});
       if(sourceSignals.act&&generatedSignals.wait&&!sourceSignals.wait)issues.push({id:`${h}.${position}`,type:'semantic-conflict',conflict:'act-vs-wait'});
       if(sourceSignals.wait&&generatedSignals.act&&!sourceSignals.act)issues.push({id:`${h}.${position}`,type:'semantic-conflict',conflict:'wait-vs-act'});
       if(sourceSignals.ease&&generatedSignals.press&&!sourceSignals.press)issues.push({id:`${h}.${position}`,type:'semantic-conflict',conflict:'ease-vs-pressure'});
       if(sourceSignals.finish&&generatedSignals.continue&&!sourceSignals.continue)issues.push({id:`${h}.${position}`,type:'semantic-conflict',conflict:'finish-vs-continue'});
-
-      repeatedConcepts.forEach(([name,stems])=>{
-        const hits=stems.reduce((sum,stem)=>sum+(text.split(stem).length-1),0);
-        if(hits>=3)issues.push({id:`${h}.${position}`,type:'repeated-concept',concept:name,hits});
-      });
-
+      repeatedConcepts.forEach(([name,stems])=>{const hits=stems.reduce((sum,stem)=>sum+(text.split(stem).length-1),0);if(hits>=3)issues.push({id:`${h}.${position}`,type:'repeated-concept',concept:name,hits});});
       const sentences=result.explanation.split(/[.!?]+/).map(value=>value.trim()).filter(Boolean);
       if(sentences.length!==new Set(sentences.map(value=>value.toLowerCase())).size)issues.push({id:`${h}.${position}`,type:'duplicate-sentence'});
       if(result.explanation.length>500)issues.push({id:`${h}.${position}`,type:'too-long',chars:result.explanation.length});
     }
   }
-
   const report={ok:issues.length===0,checked,total:384,withNuance,stageOnly,issues};
   globalThis.__structuralAudit=report;
   console.info(`[structural-audit] ${checked}/384; extra nuance: ${withNuance}; stage+line only: ${stageOnly}; ${issues.length} issue(s).`,report);
@@ -191,15 +187,11 @@ function resolveLine(card,primary){
   const badgeText=card.querySelector('.changing-line-badge')?.textContent?.trim()||'';
   const position=Number(badgeText);
   if(Number.isInteger(position)&&position>=1&&position<=6)return getChangingLine(primary,position);
-
   const variants=Array.from({length:6},(_,i)=>getChangingLine(primary,i+1));
   const title=card.querySelector('strong')?.textContent?.trim()||'';
   const paragraphs=Array.from(card.querySelectorAll(':scope > p'));
   const originalMeaning=paragraphs[0]?.dataset.originalText||paragraphs[0]?.textContent?.trim()||'';
-  return variants.find(item=>item.title===title&&item.meaning===originalMeaning)
-    ||variants.find(item=>item.title===title)
-    ||variants.find(item=>item.meaning===originalMeaning)
-    ||null;
+  return variants.find(item=>item.title===title&&item.meaning===originalMeaning)||variants.find(item=>item.title===title)||variants.find(item=>item.meaning===originalMeaning)||null;
 }
 
 function decorateChangingLines(){
@@ -207,7 +199,6 @@ function decorateChangingLines(){
   if(!primaryNumber)return;
   const primary=getHexagramData(primaryNumber);
   if(!primary)return;
-
   document.querySelectorAll('#changing-lines-list .changing-line-card').forEach(card=>{
     card.querySelector('.structural-line-note')?.remove();
     const paragraphs=Array.from(card.querySelectorAll(':scope > p'));
@@ -215,7 +206,6 @@ function decorateChangingLines(){
     if(!line)return;
     const integrated=integratedText(primaryNumber,line);
     if(!integrated)return;
-
     if(paragraphs[0]){
       if(!paragraphs[0].dataset.originalText)paragraphs[0].dataset.originalText=paragraphs[0].textContent.trim();
       paragraphs[0].classList.add('integrated-reading');
