@@ -35,37 +35,62 @@ function hasAny(text,words){
   return words.some(word=>value.includes(word));
 }
 
-function minorityMeaning(structural,item,baseText){
+function semanticSignals(text){
+  return {
+    support:hasAny(text,['підтрим','допом','поруч','зв’яз','зв\'яз','опор','довір','союз','партнер','разом','відгук']),
+    isolation:hasAny(text,['самостій','самот','без підтрим','ніхто не','відсутн','ізоль']),
+    act:hasAny(text,['дійте','діяти','дія','рухайтесь','рухатися','крок','починайте','почати','рішуч','виступ','просува']),
+    wait:hasAny(text,['не посп','зачека','почек','пауза','зупин','стрим','не рух','відкла']),
+    ease:hasAny(text,['послаб','м’як','мяк','не тис','не форс','без примус','відступ','прийнят']),
+    press:hasAny(text,['натиск','тиснути','тиск','форс','примус','наполяг']),
+    finish:hasAny(text,['заверш','закінч','відпуст','межа','кінець']),
+    continue:hasAny(text,['продовж','розвива','рухатися далі','йти далі','просува'])
+  };
+}
+
+function minorityMeaning(structural,item,baseText,signals){
   if(structural.minority!==item.type)return '';
   const decisive=structural.yangCount===1||structural.yinCount===1;
 
   if(item.type==='yang'){
-    if(hasAny(baseText,['дія','рух','рішуч','ініціат','імпульс','актив']))return '';
+    if(signals.act||signals.wait||hasAny(baseText,['ініціат','імпульс','актив']))return '';
     return decisive
-      ? 'На тлі загальної стриманості саме тут виникає виразний імпульс до дії; важливо спрямувати його точно, а не розпорошувати.'
-      : 'На тлі більш стриманої ситуації тут помітніша потреба діяти; краще дати їй чіткий напрям, ніж просто посилювати натиск.';
+      ? 'На тлі загальної стриманості тут з’являється виразний імпульс до дії; його краще спрямувати точно, а не розпорошувати.'
+      : 'На тлі більш стриманої ситуації тут помітніша потреба діяти; краще надати їй чіткого напряму, ніж просто посилювати натиск.';
   }
 
-  if(hasAny(baseText,['зупин','стрим','прийнят','почек','тиша','відступ','пауза','м’як','мяк']))return '';
+  if(signals.wait||signals.ease)return '';
   return decisive
-    ? 'На тлі загальної активності саме тут особливо потрібна здатність зупинитися, прийняти обмеження й не відповідати силою на силу.'
-    : 'На тлі активного розвитку тут важливіше зберегти сприйнятливість і вчасно послабити натиск.';
+    ? 'На тлі загальної активності тут особливо важливо вчасно послабити натиск і не відповідати силою на силу.'
+    : 'На тлі активного розвитку тут корисніше зберегти сприйнятливість і вчасно послабити натиск.';
 }
 
-function chooseNuance(structural,item,baseText){
-  const balanceAlready=hasAny(baseText,['мір','рівнов','баланс','середин','центр','крайн']);
-  const supportAlready=hasAny(baseText,['підтрим','опор','довір','підтвердж']);
-  const cautionAlready=hasAny(baseText,['не посп','перевір','обереж','ризик','форс']);
-  const minority=minorityMeaning(structural,item,baseText);
+function chooseNuance(structural,item,sourceText){
+  const signals=semanticSignals(sourceText);
+  const balanceAlready=hasAny(sourceText,['мір','рівнов','баланс','середин','центр','крайн']);
+  const supportAlready=signals.support;
+  const cautionAlready=hasAny(sourceText,['не посп','перевір','обереж','ризик','форс']);
+  const minority=minorityMeaning(structural,item,sourceText,signals);
 
-  // Рідкісна якість отримує змістовний наслідок, а не технічне пояснення її "ваги".
+  // Ієрархія: зміст конкретної лінії > практична порада > структурне уточнення.
+  // Структура ніколи не повинна заперечувати прямо висловлений зміст лінії.
   if(minority)return minority;
   if(item.central&&!balanceAlready)return 'Тепер важливо не посилювати крайнощі, а втримати ясний напрям і міру.';
 
-  if(!item.appropriate&&!item.correspondence&&!cautionAlready)return 'Тут є внутрішня суперечність, а підтримка з іншого боку ситуації поки неочевидна, тому перед дією потрібна додаткова перевірка.';
-  if(!item.appropriate&&item.correspondence)return 'Попри внутрішню суперечність, з іншого боку ситуації є відгук; цю напругу можна використати для переходу.';
-  if(item.appropriate&&item.correspondence&&!supportAlready)return 'Напрям має достатню опору, тож рухатися далі можна без зайвого форсування.';
-  if(item.appropriate&&!item.correspondence&&!supportAlready)return 'Напрям має внутрішню опору, хоча підтримка з іншого боку ситуації поки неочевидна.';
+  if(!item.appropriate&&!item.correspondence&&!cautionAlready&&!supportAlready){
+    return 'Тут є внутрішня суперечність, тому перед дією варто ще раз перевірити, чи обраний напрям справді відповідає ситуації.';
+  }
+  if(!item.appropriate&&item.correspondence&&!signals.isolation){
+    return supportAlready
+      ? 'Наявний зв’язок може допомогти пройти цю внутрішню суперечність без зайвого тиску.'
+      : 'Попри внутрішню суперечність, тут можливий відгук з іншого боку ситуації; цю напругу можна використати для переходу.';
+  }
+  if(item.appropriate&&item.correspondence&&!supportAlready&&!signals.isolation){
+    return 'Напрям має достатню опору, тож рухатися далі можна без зайвого форсування.';
+  }
+  if(item.appropriate&&!item.correspondence&&!supportAlready){
+    return 'Напрям має внутрішню опору; цього достатньо, щоб не шукати зовнішнього підтвердження будь-якою ціною.';
+  }
   return '';
 }
 
@@ -77,7 +102,8 @@ function integratedText(primaryNumber,line){
   const advice=String(line.advice||'').trim();
   const lead=stageLead[item.position]||'';
   const base=[lead,meaning].filter(Boolean).join(' ');
-  const nuance=chooseNuance(structural,item,`${base} ${advice}`);
+  const sourceText=`${meaning} ${advice}`;
+  const nuance=chooseNuance(structural,item,sourceText);
   return {explanation:[base,nuance].filter(Boolean).join(' '),advice};
 }
 
@@ -100,9 +126,18 @@ function auditStructuralReadings(){
       const line=getChangingLine(hexagram,position);
       const result=integratedText(h,line);
       if(!result?.explanation){issues.push({id:`${h}.${position}`,type:'missing-reading'});continue;}
+      const source=`${line.meaning||''} ${line.advice||''}`;
+      const sourceSignals=semanticSignals(source);
+      const generatedSignals=semanticSignals(result.explanation);
       const text=`${result.explanation} ${result.advice}`.toLowerCase();
       const technical=forbidden.filter(term=>text.includes(term));
       if(technical.length)issues.push({id:`${h}.${position}`,type:'technical-language',terms:technical});
+
+      if(sourceSignals.support&&generatedSignals.isolation)issues.push({id:`${h}.${position}`,type:'semantic-conflict',conflict:'support-vs-isolation'});
+      if(sourceSignals.act&&generatedSignals.wait&&!sourceSignals.wait)issues.push({id:`${h}.${position}`,type:'semantic-conflict',conflict:'act-vs-wait'});
+      if(sourceSignals.wait&&generatedSignals.act&&!sourceSignals.act)issues.push({id:`${h}.${position}`,type:'semantic-conflict',conflict:'wait-vs-act'});
+      if(sourceSignals.ease&&generatedSignals.press&&!sourceSignals.press)issues.push({id:`${h}.${position}`,type:'semantic-conflict',conflict:'ease-vs-pressure'});
+      if(sourceSignals.finish&&generatedSignals.continue&&!sourceSignals.continue)issues.push({id:`${h}.${position}`,type:'semantic-conflict',conflict:'finish-vs-continue'});
 
       repeatedConcepts.forEach(([name,stems])=>{
         const hits=stems.reduce((sum,stem)=>sum+(text.split(stem).length-1),0);
