@@ -44,22 +44,29 @@ function semanticSignals(text){
     ease:hasAny(text,['послаб','м’як','мяк','не тис','не форс','без примус','відступ','прийнят']),
     press:hasAny(text,['натиск','тиснути','тиск','форс','примус','наполяг']),
     finish:hasAny(text,['заверш','закінч','відпуст','межа','кінець']),
-    continue:hasAny(text,['продовж','розвива','рухатися далі','йти далі','просува'])
+    continue:hasAny(text,['продовж','розвива','рухатися далі','йти далі','просува']),
+    balance:hasAny(text,['мір','рівнов','баланс','середин','центр','крайн']),
+    verify:hasAny(text,['перевір','підтвердж','перекона','проясн']),
+    direction:hasAny(text,['напрям','курс','мета','вектор']),
+    restraint:hasAny(text,['стрим','спок','терп','пауза','не посп','послаб']),
+    initiative:hasAny(text,['ініціат','імпульс','актив','діяти','дія','крок'])
   };
 }
 
-function minorityMeaning(structural,item,baseText,signals){
+function minorityMeaning(structural,item,sourceText,signals){
   if(structural.minority!==item.type)return '';
   const decisive=structural.yangCount===1||structural.yinCount===1;
 
   if(item.type==='yang'){
-    if(signals.act||signals.wait||hasAny(baseText,['ініціат','імпульс','актив']))return '';
+    // Якщо лінія вже говорить про дію/напрям/імпульс, рідкісний ян не додає нового сенсу.
+    if(signals.initiative||signals.direction||signals.press)return '';
     return decisive
       ? 'На тлі загальної стриманості тут з’являється виразний імпульс до дії; його краще спрямувати точно, а не розпорошувати.'
       : 'На тлі більш стриманої ситуації тут помітніша потреба діяти; краще надати їй чіткого напряму, ніж просто посилювати натиск.';
   }
 
-  if(signals.wait||signals.ease)return '';
+  // Якщо лінія вже радить стриманість/послаблення, рідкісний інь також нічого нового не додає.
+  if(signals.wait||signals.ease||signals.restraint)return '';
   return decisive
     ? 'На тлі загальної активності тут особливо важливо вчасно послабити натиск і не відповідати силою на силу.'
     : 'На тлі активного розвитку тут корисніше зберегти сприйнятливість і вчасно послабити натиск.';
@@ -67,29 +74,38 @@ function minorityMeaning(structural,item,baseText,signals){
 
 function chooseNuance(structural,item,sourceText){
   const signals=semanticSignals(sourceText);
-  const balanceAlready=hasAny(sourceText,['мір','рівнов','баланс','середин','центр','крайн']);
-  const supportAlready=signals.support;
-  const cautionAlready=hasAny(sourceText,['не посп','перевір','обереж','ризик','форс']);
+
+  // Головне правило: структурне уточнення необов’язкове.
+  // Воно з’являється тільки тоді, коли додає новий практичний сенс до meaning + advice.
   const minority=minorityMeaning(structural,item,sourceText,signals);
-
-  // Ієрархія: зміст конкретної лінії > практична порада > структурне уточнення.
-  // Структура ніколи не повинна заперечувати прямо висловлений зміст лінії.
   if(minority)return minority;
-  if(item.central&&!balanceAlready)return 'Тепер важливо не посилювати крайнощі, а втримати ясний напрям і міру.';
 
-  if(!item.appropriate&&!item.correspondence&&!cautionAlready&&!supportAlready){
-    return 'Тут є внутрішня суперечність, тому перед дією варто ще раз перевірити, чи обраний напрям справді відповідає ситуації.';
+  if(item.central&&!signals.balance&&!signals.direction){
+    return 'Тепер важливо не посилювати крайнощі, а втримати ясний напрям і міру.';
   }
-  if(!item.appropriate&&item.correspondence&&!signals.isolation){
-    return supportAlready
-      ? 'Наявний зв’язок може допомогти пройти цю внутрішню суперечність без зайвого тиску.'
-      : 'Попри внутрішню суперечність, тут можливий відгук з іншого боку ситуації; цю напругу можна використати для переходу.';
+
+  if(!item.appropriate&&!item.correspondence){
+    if(signals.verify||signals.support||signals.wait||signals.ease)return '';
+    return 'Перед дією варто ще раз перевірити, чи обраний напрям справді відповідає ситуації.';
   }
-  if(item.appropriate&&item.correspondence&&!supportAlready&&!signals.isolation){
-    return 'Напрям має достатню опору, тож рухатися далі можна без зайвого форсування.';
+
+  if(!item.appropriate&&item.correspondence){
+    // Сам факт підтримки вже є в тексті — не пояснюємо його вдруге.
+    if(signals.support)return '';
+    // Якщо лінія вже описує суперечність, напругу, тиск або потребу послабити його,
+    // структурний коментар також не потрібен.
+    if(signals.press||signals.ease||signals.verify)return '';
+    return 'Відгук з іншого боку ситуації може допомогти пройти цей перехід без зайвого тиску.';
   }
-  if(item.appropriate&&!item.correspondence&&!supportAlready){
-    return 'Напрям має внутрішню опору; цього достатньо, щоб не шукати зовнішнього підтвердження будь-якою ціною.';
+
+  if(item.appropriate&&item.correspondence){
+    if(signals.support||signals.direction||signals.continue||signals.act)return '';
+    return 'Є достатня опора, щоб рухатися далі без зайвого форсування.';
+  }
+
+  if(item.appropriate&&!item.correspondence){
+    if(signals.support||signals.direction||signals.verify||signals.isolation)return '';
+    return 'Внутрішньої опори достатньо, тому зовнішнього підтвердження не потрібно шукати будь-якою ціною.';
   }
   return '';
 }
@@ -104,12 +120,14 @@ function integratedText(primaryNumber,line){
   const base=[lead,meaning].filter(Boolean).join(' ');
   const sourceText=`${meaning} ${advice}`;
   const nuance=chooseNuance(structural,item,sourceText);
-  return {explanation:[base,nuance].filter(Boolean).join(' '),advice};
+  return {explanation:[base,nuance].filter(Boolean).join(' '),advice,hasNuance:Boolean(nuance)};
 }
 
 function auditStructuralReadings(){
   const issues=[];
   let checked=0;
+  let withNuance=0;
+  let stageOnly=0;
   const forbidden=['центральне положення','центральна позиція','будова гексаграми','структурн','відповідність','ян ','інь ','позиція'];
   const repeatedConcepts=[
     ['міра',['мір','рівнов','баланс','крайн']],
@@ -126,6 +144,7 @@ function auditStructuralReadings(){
       const line=getChangingLine(hexagram,position);
       const result=integratedText(h,line);
       if(!result?.explanation){issues.push({id:`${h}.${position}`,type:'missing-reading'});continue;}
+      if(result.hasNuance)withNuance++;else stageOnly++;
       const source=`${line.meaning||''} ${line.advice||''}`;
       const sourceSignals=semanticSignals(source);
       const generatedSignals=semanticSignals(result.explanation);
@@ -146,13 +165,13 @@ function auditStructuralReadings(){
 
       const sentences=result.explanation.split(/[.!?]+/).map(value=>value.trim()).filter(Boolean);
       if(sentences.length!==new Set(sentences.map(value=>value.toLowerCase())).size)issues.push({id:`${h}.${position}`,type:'duplicate-sentence'});
-      if(result.explanation.length>520)issues.push({id:`${h}.${position}`,type:'too-long',chars:result.explanation.length});
+      if(result.explanation.length>500)issues.push({id:`${h}.${position}`,type:'too-long',chars:result.explanation.length});
     }
   }
 
-  const report={ok:issues.length===0,checked,total:384,issues};
+  const report={ok:issues.length===0,checked,total:384,withNuance,stageOnly,issues};
   globalThis.__structuralAudit=report;
-  console.info(`[structural-audit] ${checked}/384 readings checked; ${issues.length} issue(s).`,report);
+  console.info(`[structural-audit] ${checked}/384; extra nuance: ${withNuance}; stage+line only: ${stageOnly}; ${issues.length} issue(s).`,report);
   return report;
 }
 
