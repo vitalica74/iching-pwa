@@ -41,7 +41,6 @@ function chooseNuance(structural,item,baseText){
   const supportAlready=hasAny(baseText,['підтрим','опор','довір','підтвердж']);
   const cautionAlready=hasAny(baseText,['не посп','перевір','обереж','ризик','форс']);
 
-  // Структурні правила залишаються всередині алгоритму; назовні виходить лише їхній людський сенс.
   if(minority&&item.central&&!balanceAlready)return 'Саме тут зосереджена одна з головних тем зміни: важливо втримати ясний напрям без крайнощів.';
   if(minority)return 'Саме ця точка може виявитися одним із головних акцентів зміни, тому її не варто вважати другорядною.';
   if(item.central&&!balanceAlready)return 'Тепер важливо не посилювати крайнощі, а втримати ясний напрям і міру.';
@@ -77,18 +76,31 @@ function markExperiment(){
   }
 }
 
+function resolveLine(card,primary){
+  const badgeText=card.querySelector('.changing-line-badge')?.textContent?.trim()||'';
+  const position=Number(badgeText);
+  if(Number.isInteger(position)&&position>=1&&position<=6)return getChangingLine(primary,position);
+
+  const variants=Array.from({length:6},(_,i)=>getChangingLine(primary,i+1));
+  const title=card.querySelector('strong')?.textContent?.trim()||'';
+  const paragraphs=Array.from(card.querySelectorAll(':scope > p'));
+  const originalMeaning=paragraphs[0]?.dataset.originalText||paragraphs[0]?.textContent?.trim()||'';
+  return variants.find(item=>item.title===title&&item.meaning===originalMeaning)
+    ||variants.find(item=>item.title===title)
+    ||variants.find(item=>item.meaning===originalMeaning)
+    ||null;
+}
+
 function decorateChangingLines(){
   const primaryNumber=numberFrom($('#primary-details-title')?.textContent);
   if(!primaryNumber)return;
   const primary=getHexagramData(primaryNumber);
-  const variants=Array.from({length:6},(_,i)=>getChangingLine(primary,i+1));
+  if(!primary)return;
 
   document.querySelectorAll('#changing-lines-list .changing-line-card').forEach(card=>{
     card.querySelector('.structural-line-note')?.remove();
-    const title=card.querySelector('strong')?.textContent?.trim()||'';
     const paragraphs=Array.from(card.querySelectorAll(':scope > p'));
-    const originalMeaning=paragraphs[0]?.dataset.originalText||paragraphs[0]?.textContent?.trim()||'';
-    const line=variants.find(item=>item.title===title&&item.meaning===originalMeaning)||variants.find(item=>item.title===title)||variants.find(item=>item.meaning===originalMeaning);
+    const line=resolveLine(card,primary);
     if(!line)return;
     const integrated=integratedText(primaryNumber,line);
     if(!integrated)return;
