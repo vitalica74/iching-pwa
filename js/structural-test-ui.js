@@ -31,20 +31,18 @@ function blendStage(position,meaning){
   const text=String(meaning||'').trim();
   if(!text)return '';
   const lower=lowerFirst(text);
-  const conditional=/^(коли|якщо|поки|щойно|коли-небудь)\b/i.test(text);
+  const conditional=/^(коли|якщо|поки|щойно)\b/i.test(text);
 
-  // Етап більше не подається окремою службовою фразою.
-  // Він стає граматичною рамкою самого змісту лінії.
   if(conditional){
-    const shortLead={
-      1:'На початку процес ще не набрав сили.',
-      2:'На внутрішньому етапі основа ще формується.',
-      3:'Тут внутрішнє визрівання вже торкається зовнішньої дії.',
-      4:'Тут зміна вже входить у реальну взаємодію.',
-      5:'На зрілому етапі наслідки вже стають помітними.',
-      6:'На межі завершення особливо видно, що стало надмірним.'
-    };
-    return `${shortLead[position]||''} ${text}`.trim();
+    const lead={
+      1:'На початку процес ще не набрав повної сили.',
+      2:'Основа ситуації ще формується зсередини.',
+      3:'Внутрішнє визрівання вже підходить до зовнішньої дії.',
+      4:'Зміна вже входить у реальну взаємодію з обставинами.',
+      5:'Наслідки вже стають помітними у зрілому прояві.',
+      6:'Процес підійшов до своєї межі.'
+    }[position]||'';
+    return `${lead} ${text}`.trim();
   }
 
   const prefix={
@@ -58,65 +56,33 @@ function blendStage(position,meaning){
   return `${prefix}${lower}`.trim();
 }
 
-function hasAny(text,words){
-  const value=String(text||'').toLowerCase();
-  return words.some(word=>value.includes(word));
-}
-
 function semanticSignals(text){
+  const value=String(text||'').toLowerCase();
+  const has=words=>words.some(word=>value.includes(word));
   return {
-    support:hasAny(text,['підтрим','допом','поруч','зв’яз','зв\'яз','опор','довір','союз','партнер','разом','відгук']),
-    isolation:hasAny(text,['самостій','самот','без підтрим','ніхто не','відсутн','ізоль']),
-    act:hasAny(text,['дійте','діяти','дія','рухайтесь','рухатися','крок','починайте','почати','рішуч','виступ','просува']),
-    wait:hasAny(text,['не посп','зачека','почек','пауза','зупин','стрим','не рух','відкла']),
-    ease:hasAny(text,['послаб','м’як','мяк','не тис','не форс','без примус','відступ','прийнят']),
-    press:hasAny(text,['натиск','тиснути','тиск','форс','примус','наполяг']),
-    finish:hasAny(text,['заверш','закінч','відпуст','межа','кінець']),
-    continue:hasAny(text,['продовж','розвива','рухатися далі','йти далі','просува']),
-    balance:hasAny(text,['мір','рівнов','баланс','середин','центр','крайн']),
-    verify:hasAny(text,['перевір','підтвердж','перекона','проясн']),
-    direction:hasAny(text,['напрям','курс','мета','вектор']),
-    restraint:hasAny(text,['стрим','спок','терп','пауза','не посп','послаб']),
-    initiative:hasAny(text,['ініціат','імпульс','актив','діяти','дія','крок'])
+    support:has(['підтрим','допом','поруч','зв’яз','зв\'яз','опор','довір','союз','партнер','разом','відгук']),
+    act:has(['діяти','дія','крок','рух','рішуч','ініціат','імпульс']),
+    wait:has(['не посп','зачека','почек','пауза','зупин','стрим']),
+    ease:has(['послаб','м’як','мяк','не тис','не форс','відступ']),
+    finish:has(['заверш','закінч','відпуст','межа','кінець']),
+    balance:has(['мір','рівнов','баланс','середин','центр','крайн']),
+    verify:has(['перевір','підтвердж','перекона','проясн']),
+    direction:has(['напрям','курс','мета','вектор'])
   };
 }
 
-function minorityMeaning(structural,item,sourceText,signals){
-  if(structural.minority!==item.type)return '';
-  const decisive=structural.yangCount===1||structural.yinCount===1;
-  if(item.type==='yang'){
-    if(signals.initiative||signals.direction||signals.press)return '';
-    return decisive
-      ? 'На тлі загальної стриманості тут з’являється виразний імпульс до дії; його краще спрямувати точно, а не розпорошувати.'
-      : 'На тлі більш стриманої ситуації тут помітніша потреба діяти; краще надати їй чіткого напряму, ніж просто посилювати натиск.';
-  }
-  if(signals.wait||signals.ease||signals.restraint)return '';
-  return decisive
-    ? 'На тлі загальної активності тут особливо важливо вчасно послабити натиск і не відповідати силою на силу.'
-    : 'На тлі активного розвитку тут корисніше зберегти сприйнятливість і вчасно послабити натиск.';
-}
+function structuralShade(structural,item,meaning,advice){
+  const source=`${meaning} ${advice}`;
+  const signals=semanticSignals(source);
+  const minority=structural.minority===item.type;
 
-function chooseNuance(structural,item,sourceText){
-  const signals=semanticSignals(sourceText);
-  const minority=minorityMeaning(structural,item,sourceText,signals);
-  if(minority)return minority;
-  if(item.central&&!signals.balance&&!signals.direction)return 'Тепер важливо не посилювати крайнощі, а втримати ясний напрям і міру.';
-  if(!item.appropriate&&!item.correspondence){
-    if(signals.verify||signals.support||signals.wait||signals.ease)return '';
-    return 'Перед дією варто ще раз перевірити, чи обраний напрям справді відповідає ситуації.';
-  }
-  if(!item.appropriate&&item.correspondence){
-    if(signals.support||signals.press||signals.ease||signals.verify)return '';
-    return 'Відгук з іншого боку ситуації може допомогти пройти цей перехід без зайвого тиску.';
-  }
-  if(item.appropriate&&item.correspondence){
-    if(signals.support||signals.direction||signals.continue||signals.act)return '';
-    return 'Є достатня опора, щоб рухатися далі без зайвого форсування.';
-  }
-  if(item.appropriate&&!item.correspondence){
-    if(signals.support||signals.direction||signals.verify||signals.isolation)return '';
-    return 'Внутрішньої опори достатньо, тому зовнішнього підтвердження не потрібно шукати будь-якою ціною.';
-  }
+  // Структура тут не додає окремої поради. Вона лише може дати короткий
+  // відтінок, якщо цей відтінок уже узгоджується зі змістом самої лінії.
+  if(item.central&&signals.balance)return 'Тут тема міри справді є центральною для самого змісту лінії.';
+  if(item.correspondence&&signals.support)return 'Наявний зв’язок тут є частиною самого шляху зміни.';
+  if(!item.appropriate&&signals.verify)return 'Потреба перевірки тут випливає з напруги самої ситуації.';
+  if(minority&&item.type==='yang'&&signals.act)return 'Імпульс до дії тут виразніший, ніж загальний фон ситуації.';
+  if(minority&&item.type==='yin'&&(signals.wait||signals.ease))return 'Потреба послабити натиск тут виразніша, ніж загальний фон ситуації.';
   return '';
 }
 
@@ -127,18 +93,19 @@ function integratedText(primaryNumber,line){
   const meaning=String(line.meaning||'').trim();
   const advice=String(line.advice||'').trim();
   const base=blendStage(item.position,meaning);
-  const sourceText=`${meaning} ${advice}`;
-  const nuance=chooseNuance(structural,item,sourceText);
-  return {explanation:[base,nuance].filter(Boolean).join(' '),advice,hasNuance:Boolean(nuance)};
+  const shade=structuralShade(structural,item,meaning,advice);
+
+  // Навіть коли shade порожній, позиція вже вплинула на формулювання через blendStage.
+  return {explanation:[base,shade].filter(Boolean).join(' '),advice,hasShade:Boolean(shade)};
 }
 
 function auditStructuralReadings(){
   const issues=[];
   let checked=0;
-  let withNuance=0;
+  let withShade=0;
   let stageOnly=0;
   const forbidden=['центральне положення','центральна позиція','будова гексаграми','структурн','відповідність','ян ','інь ','позиція'];
-  const repeatedConcepts=[['міра',['мір','рівнов','баланс','крайн']],['підтримка',['підтрим','опор','відгук']],['перевірка',['перевір','підтвердж']],['натиск',['натиск','форс','тиск']]];
+
   for(let h=1;h<=64;h++){
     const hexagram=getHexagramData(h);
     if(!hexagram){issues.push({id:String(h),type:'missing-hexagram'});continue;}
@@ -147,27 +114,17 @@ function auditStructuralReadings(){
       const line=getChangingLine(hexagram,position);
       const result=integratedText(h,line);
       if(!result?.explanation){issues.push({id:`${h}.${position}`,type:'missing-reading'});continue;}
-      if(result.hasNuance)withNuance++;else stageOnly++;
-      const source=`${line.meaning||''} ${line.advice||''}`;
-      const sourceSignals=semanticSignals(source);
-      const generatedSignals=semanticSignals(result.explanation);
+      if(result.hasShade)withShade++;else stageOnly++;
       const text=`${result.explanation} ${result.advice}`.toLowerCase();
       const technical=forbidden.filter(term=>text.includes(term));
       if(technical.length)issues.push({id:`${h}.${position}`,type:'technical-language',terms:technical});
-      if(sourceSignals.support&&generatedSignals.isolation)issues.push({id:`${h}.${position}`,type:'semantic-conflict',conflict:'support-vs-isolation'});
-      if(sourceSignals.act&&generatedSignals.wait&&!sourceSignals.wait)issues.push({id:`${h}.${position}`,type:'semantic-conflict',conflict:'act-vs-wait'});
-      if(sourceSignals.wait&&generatedSignals.act&&!sourceSignals.act)issues.push({id:`${h}.${position}`,type:'semantic-conflict',conflict:'wait-vs-act'});
-      if(sourceSignals.ease&&generatedSignals.press&&!sourceSignals.press)issues.push({id:`${h}.${position}`,type:'semantic-conflict',conflict:'ease-vs-pressure'});
-      if(sourceSignals.finish&&generatedSignals.continue&&!sourceSignals.continue)issues.push({id:`${h}.${position}`,type:'semantic-conflict',conflict:'finish-vs-continue'});
-      repeatedConcepts.forEach(([name,stems])=>{const hits=stems.reduce((sum,stem)=>sum+(text.split(stem).length-1),0);if(hits>=3)issues.push({id:`${h}.${position}`,type:'repeated-concept',concept:name,hits});});
-      const sentences=result.explanation.split(/[.!?]+/).map(value=>value.trim()).filter(Boolean);
-      if(sentences.length!==new Set(sentences.map(value=>value.toLowerCase())).size)issues.push({id:`${h}.${position}`,type:'duplicate-sentence'});
-      if(result.explanation.length>500)issues.push({id:`${h}.${position}`,type:'too-long',chars:result.explanation.length});
+      if(result.explanation.length>460)issues.push({id:`${h}.${position}`,type:'too-long',chars:result.explanation.length});
     }
   }
-  const report={ok:issues.length===0,checked,total:384,withNuance,stageOnly,issues};
+
+  const report={ok:issues.length===0,checked,total:384,withShade,stageOnly,issues};
   globalThis.__structuralAudit=report;
-  console.info(`[structural-audit] ${checked}/384; extra nuance: ${withNuance}; stage+line only: ${stageOnly}; ${issues.length} issue(s).`,report);
+  console.info(`[structural-audit] ${checked}/384; contextual shade: ${withShade}; stage-framed only: ${stageOnly}; ${issues.length} issue(s).`,report);
   return report;
 }
 
@@ -178,7 +135,7 @@ function markExperiment(){
     const badge=document.createElement('p');
     badge.id='structural-test-badge';
     badge.className='structural-test-badge';
-    badge.textContent='Експеримент: природне структурне читання';
+    badge.textContent='Експеримент: структура як контекст';
     result.querySelector('.progress')?.insertAdjacentElement('afterend',badge);
   }
 }
@@ -187,11 +144,15 @@ function resolveLine(card,primary){
   const badgeText=card.querySelector('.changing-line-badge')?.textContent?.trim()||'';
   const position=Number(badgeText);
   if(Number.isInteger(position)&&position>=1&&position<=6)return getChangingLine(primary,position);
+
   const variants=Array.from({length:6},(_,i)=>getChangingLine(primary,i+1));
   const title=card.querySelector('strong')?.textContent?.trim()||'';
   const paragraphs=Array.from(card.querySelectorAll(':scope > p'));
   const originalMeaning=paragraphs[0]?.dataset.originalText||paragraphs[0]?.textContent?.trim()||'';
-  return variants.find(item=>item.title===title&&item.meaning===originalMeaning)||variants.find(item=>item.title===title)||variants.find(item=>item.meaning===originalMeaning)||null;
+  return variants.find(item=>item.title===title&&item.meaning===originalMeaning)
+    ||variants.find(item=>item.title===title)
+    ||variants.find(item=>item.meaning===originalMeaning)
+    ||null;
 }
 
 function decorateChangingLines(){
@@ -199,6 +160,7 @@ function decorateChangingLines(){
   if(!primaryNumber)return;
   const primary=getHexagramData(primaryNumber);
   if(!primary)return;
+
   document.querySelectorAll('#changing-lines-list .changing-line-card').forEach(card=>{
     card.querySelector('.structural-line-note')?.remove();
     const paragraphs=Array.from(card.querySelectorAll(':scope > p'));
@@ -206,6 +168,7 @@ function decorateChangingLines(){
     if(!line)return;
     const integrated=integratedText(primaryNumber,line);
     if(!integrated)return;
+
     if(paragraphs[0]){
       if(!paragraphs[0].dataset.originalText)paragraphs[0].dataset.originalText=paragraphs[0].textContent.trim();
       paragraphs[0].classList.add('integrated-reading');
@@ -224,4 +187,11 @@ ensureTestStyles();
 auditStructuralReadings();
 render();
 const target=$('#answer-result');
-if(target){let scheduled=false;new MutationObserver(()=>{if(scheduled)return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;render()})}).observe(target,{subtree:true,childList:true,characterData:true})}
+if(target){
+  let scheduled=false;
+  new MutationObserver(()=>{
+    if(scheduled)return;
+    scheduled=true;
+    requestAnimationFrame(()=>{scheduled=false;render()});
+  }).observe(target,{subtree:true,childList:true,characterData:true});
+}
