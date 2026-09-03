@@ -21,38 +21,13 @@ function ensureTestStyles(){
   document.head.appendChild(style);
 }
 
-function lowerFirst(text){
-  const value=String(text||'').trim();
-  if(!value)return '';
-  return value.charAt(0).toLocaleLowerCase('uk-UA')+value.slice(1);
+function hasAny(text,parts){
+  const value=String(text||'').toLowerCase();
+  return parts.some(part=>value.includes(part));
 }
-
-function stableChoice(text,count){
-  let hash=0;
-  for(const ch of String(text||''))hash=(hash*31+ch.codePointAt(0))>>>0;
-  return count?hash%count:0;
-}
-
-const stageFrames={
-  1:['На самому початку ','Поки все лише починається, ','На першому етапі '],
-  2:['Поки ситуація ще визріває, ','Поки основа ще формується, ','На внутрішньому етапі '],
-  3:['На межі між визріванням і дією ','Коли внутрішній процес уже підходить до дії, ','Перед виходом у зовнішню дію '],
-  4:['Коли зміна виходить назовні, ','На етапі реальної взаємодії ','Коли намір уже переходить у дію, '],
-  5:['У зрілій і вже помітній фазі ','Коли наслідки вже стають видимими, ','На зрілому етапі '],
-  6:['На межі завершення ','Коли процес доходить до своєї межі, ','Наприкінці циклу ']
-};
-
-const conditionalLeads={
-  1:['Початок ще крихкий.','Процес лише набирає форму.'],
-  2:['Основа ще формується зсередини.','Ситуація ще не вийшла назовні.'],
-  3:['Внутрішнє визрівання вже підходить до дії.','Це перехідна точка між внутрішнім і зовнішнім.'],
-  4:['Зміна вже входить у реальну взаємодію.','Намір уже переходить у зовнішню дію.'],
-  5:['Наслідки вже стають помітними.','Процес уже проявився досить зріло.'],
-  6:['Процес підійшов до межі.','Цикл уже доходить до завершення.']
-};
 
 const stageSignals={
-  1:['почат','перш','старт','зарод','відкрива','новий шлях','лише почина'],
+  1:['почат','перш','старт','зарод','відкрива','новий шлях','лише почина','ще крихк'],
   2:['форму','визріва','основ','всередин','внутрішн','ще не настав','ще не вийш'],
   3:['межі між','перехід','визрівання','підходить до дії','перед виход','готовність','назовні'],
   4:['виходить назовні','реальн','взаємод','переходить у дію','дія вже','зовнішн'],
@@ -61,27 +36,46 @@ const stageSignals={
 };
 
 function alreadyCarriesStage(position,text){
-  const value=String(text||'').toLowerCase();
-  return (stageSignals[position]||[]).some(signal=>value.includes(signal));
+  return hasAny(text,stageSignals[position]||[]);
 }
 
-function blendStage(position,meaning){
+function weaveStage(position,meaning){
   const text=String(meaning||'').trim();
-  if(!text)return '';
+  if(!text)return {text:'',woven:false};
+  if(alreadyCarriesStage(position,text))return {text,woven:false};
 
-  // Якщо сама лінія вже називає свій етап, не додаємо другу службову рамку.
-  // Так структура лишається контекстом, а не повторює «початок / межу / завершення» двічі.
-  if(alreadyCarriesStage(position,text))return text;
+  // Не додаємо готову рамку до кожної лінії. Вплітаємо стадію тільки через
+  // безпечні мовні гачки, де зміна не створює нового факту і не ламає граматику.
+  let out=text;
 
-  const conditional=/^(коли|якщо|поки|щойно)\b/i.test(text);
-  const key=`${position}:${text}`;
-  if(conditional){
-    const leads=conditionalLeads[position]||[''];
-    return `${leads[stableChoice(key,leads.length)]} ${text}`.trim();
+  if(position===1){
+    if(/\b(ще|лише)\b/i.test(text))return {text,woven:false};
+    if(/\b(може|можуть)\b/i.test(text))out=text.replace(/\b(може|можуть)\b/i,'на початку $1');
+    else if(/\b(потрібно|варто|слід)\b/i.test(text))out=text.replace(/\b(потрібно|варто|слід)\b/i,'спершу $1');
+  }else if(position===2){
+    if(/\b(поступово|ще|внутрішн|основ)\w*/i.test(text))return {text,woven:false};
+    if(/\b(зростає|зміцнюється|визначається|стає)\b/i.test(text))out=text.replace(/\b(зростає|зміцнюється|визначається|стає)\b/i,'поступово $1');
+  }else if(position===3){
+    if(/\b(дія|дії|дію|рух|крок|вихід|виходу)\b/i.test(text)){
+      out=text.replace(/\b(дія|дії|дію|рух|крок|вихід|виходу)\b/i,match=>`перехід до ${match.toLowerCase()}`);
+      // Захист від незграбних конструкцій на кшталт «перехід до виходу».
+      if(/перехід до вих(ід|оду)/i.test(out))out=text;
+    }
+  }else if(position===4){
+    if(/\b(назовні|зовнішн|взаємод|реальн)\w*/i.test(text))return {text,woven:false};
+    if(/\b(дія|дії|дію|вчинок|вчинки)\b/i.test(text))out=text.replace(/\b(дія|дії|дію|вчинок|вчинки)\b/i,match=>`зовнішн${/я$/.test(match)?'я':'ій'} ${match}`);
+  }else if(position===5){
+    if(/\b(зріл|видим|помітн|наслід|результат)\w*/i.test(text))return {text,woven:false};
+    if(/\b(стає|стають|проявляється|проявляються)\b/i.test(text))out=text.replace(/\b(стає|стають|проявляється|проявляються)\b/i,'вже $1');
+  }else if(position===6){
+    if(/\b(заверш|кінець|кінці|цикл|межа|остаточ|підсум)\w*/i.test(text))return {text,woven:false};
+    if(/\b(вже|нарешті)\b/i.test(text))return {text,woven:false};
+    if(/\b(може|можуть|стає|стають)\b/i.test(text))out=text.replace(/\b(може|можуть|стає|стають)\b/i,'на завершенні $1');
   }
-  const frames=stageFrames[position]||[''];
-  const prefix=frames[stableChoice(key,frames.length)];
-  return `${prefix}${lowerFirst(text)}`.trim();
+
+  // Якщо безпечного вплітання не знайшлося, лишаємо оригінальний зміст.
+  if(out===text)return {text,woven:false};
+  return {text:out,woven:true};
 }
 
 function semanticSignals(text){
@@ -113,15 +107,14 @@ function integratedText(primaryNumber,line){
   if(!item)return null;
   const meaning=String(line.meaning||'').trim();
   const advice=String(line.advice||'').trim();
-  const base=blendStage(item.position,meaning);
+  const woven=weaveStage(item.position,meaning);
   const shade=structuralShade(structural,item,meaning,advice);
-  return {explanation:[base,shade].filter(Boolean).join(' '),advice,hasShade:Boolean(shade)};
+  return {explanation:[woven.text,shade].filter(Boolean).join(' '),advice,hasShade:Boolean(shade),stageWoven:woven.woven};
 }
 
 function auditStructuralReadings(){
   const issues=[];
-  let checked=0,withShade=0,stageOnly=0,suppressedStageFrames=0;
-  const stageVariantCounts={1:{},2:{},3:{},4:{},5:{},6:{}};
+  let checked=0,withShade=0,stageWoven=0,stageAlreadyPresent=0,stageUntouched=0;
   const forbidden=['центральне положення','центральна позиція','будова гексаграми','структурн','відповідність','ян ','інь ','позиція','інша сторона ситуації','реальна опора','зовнішня підтримка','наявний зв’язок','наявний зв\'язок','тема міри','для самого змісту лінії','частиною самого шляху зміни','випливає з напруги самої ситуації','загальний фон ситуації','самого змісту','самої лінії'];
 
   for(let h=1;h<=64;h++){
@@ -132,26 +125,22 @@ function auditStructuralReadings(){
       const line=getChangingLine(hexagram,position);
       const result=integratedText(h,line);
       if(!result?.explanation){issues.push({id:`${h}.${position}`,type:'missing-reading'});continue;}
-      if(result.hasShade)withShade++;else stageOnly++;
-      if(alreadyCarriesStage(position,line.meaning))suppressedStageFrames++;
-
-      const frames=stageFrames[position]||[];
-      const used=frames.find(frame=>result.explanation.startsWith(frame))||(alreadyCarriesStage(position,line.meaning)?'suppressed':'conditional');
-      stageVariantCounts[position][used]=(stageVariantCounts[position][used]||0)+1;
+      if(result.hasShade)withShade++;
+      if(result.stageWoven)stageWoven++;
+      else if(alreadyCarriesStage(position,line.meaning))stageAlreadyPresent++;
+      else stageUntouched++;
 
       const text=`${result.explanation} ${result.advice}`.toLowerCase();
       const technical=forbidden.filter(term=>text.includes(term));
       if(technical.length)issues.push({id:`${h}.${position}`,type:'meta-risk-or-invented-fact',terms:technical});
       if(result.explanation.length>460)issues.push({id:`${h}.${position}`,type:'too-long',chars:result.explanation.length});
-      if(/\b(на межі\s+\S{0,18}\s*){2}/i.test(result.explanation)||/\b(наприкінці|завершенн\w*|кінець|цикл)\b.{0,30}\b(наприкінці|завершенн\w*|кінець|цикл)\b/i.test(result.explanation)){
-        issues.push({id:`${h}.${position}`,type:'possible-stage-duplication',text:result.explanation});
-      }
+      if(/\bна завершенні на завершенні\b|\bперехід до переход/i.test(result.explanation))issues.push({id:`${h}.${position}`,type:'weave-duplication',text:result.explanation});
     }
   }
 
-  const report={ok:issues.length===0,checked,total:384,withShade,stageOnly,suppressedStageFrames,stageVariantCounts,issues};
+  const report={ok:issues.length===0,checked,total:384,withShade,stageWoven,stageAlreadyPresent,stageUntouched,issues};
   globalThis.__structuralAudit=report;
-  console.info(`[structural-audit] ${checked}/384; conservative shade: ${withShade}; stage-framed only: ${stageOnly}; suppressed duplicate frames: ${suppressedStageFrames}; ${issues.length} issue(s).`,report);
+  console.info(`[structural-audit] ${checked}/384; woven: ${stageWoven}; already carried: ${stageAlreadyPresent}; untouched for safety: ${stageUntouched}; shade: ${withShade}; ${issues.length} issue(s).`,report);
   return report;
 }
 
@@ -162,7 +151,7 @@ function markExperiment(){
     const badge=document.createElement('p');
     badge.id='structural-test-badge';
     badge.className='structural-test-badge';
-    badge.textContent='Експеримент: структура як контекст';
+    badge.textContent='Експеримент: структура вплетена в зміст';
     result.querySelector('.progress')?.insertAdjacentElement('afterend',badge);
   }
 }
