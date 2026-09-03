@@ -1,17 +1,91 @@
-import {getStructuralContext} from '../data/structural-context.js';
 import {getHexagramData} from '../data/hexagrams.js';
 import {getChangingLine} from '../data/changing-lines.js';
+import {selectLineAccent,accentLabel} from '../data/line-accent-selector.js';
+
 const $=selector=>document.querySelector(selector);
 const numberFrom=text=>{const m=String(text??'').match(/№\s*(\d+)/);return m?Number(m[1]):null};
-function ensureTestStyles(){if($('#structural-test-styles'))return;const s=document.createElement('style');s.id='structural-test-styles';s.textContent=`html{min-height:100%;background:#0f172a}body{min-height:100%;padding-bottom:112px!important}.nav-bar{position:fixed!important;left:0!important;right:0!important;bottom:0!important;transform:none!important;margin:0 auto!important;width:100%!important;max-width:520px!important;border-radius:18px 18px 0 0!important;border-bottom:0!important;padding-bottom:max(8px,env(safe-area-inset-bottom))!important}.structural-test-badge{margin:.4rem 0 .8rem;padding:.5rem .7rem;border:1px dashed rgba(245,158,11,.55);border-radius:10px;color:#f59e0b;font-size:.78rem;text-align:center}.integrated-reading{margin:.55rem 0 .25rem;font-size:1rem;line-height:1.55}.integrated-reading+.integrated-reading{margin-top:.7rem}@media(max-width:699px){body{padding-bottom:108px!important}.nav-bar{padding-bottom:max(7px,env(safe-area-inset-bottom))!important}}`;document.head.appendChild(s)}
-function semanticSignals(text){const v=String(text||'').toLowerCase(),has=w=>w.some(x=>v.includes(x));return{act:has(['дія','діяти','крок','рух','рішуч','робот','створ','виправ','зроб','спрям']),relation:has(['люд','зв’яз','зв\'яз','довір','допом','підтрим','разом','взаємод']),result:has(['результ','наслід','видим','створено','система','порядок','середовищ']),excess:has(['надмір','занадто','нескінчен','виснаж','крайн','перегин','міру']),repair:has(['виправ','ремонт','помил','слабк','проблем','пошкод','тріск','протікан']),choice:has(['вибір','обрати','напрям','орієнтир','виріш','рішенн']),balance:has(['мір','рівнов','баланс','середин','центр']),inner:has(['внутр','намір','принцип','ясн','основ','готов','власн'])}}
-function roleSentence(p,s,item,structural){const minority=structural?.minority===item?.type;if(p===1){if(s.act)return'Почніть із найменшої дії, яка задає правильний напрям.';if(s.repair)return'Спершу усуньте найближчу причину, не намагаючись перебудувати все одразу.';if(s.choice)return'На початку важливіше правильно задати напрям, ніж одразу пройти далеко.'}if(p===2){if(s.result)return'Спершу створіть основу, здатну витримати майбутній результат.';if(s.relation)return'Шукайте опору в тому зв’язку, який допомагає зберегти правильний напрям.';if(s.choice)return'Оберіть те, що зміцнює напрям зсередини, а не лише дає швидку вигоду.';if(s.act)return'Не розширюйте дію швидше, ніж формується її надійна основа.'}if(p===3){if(s.repair)return'Перед наступним кроком перевірте слабке місце: на межі переходу воно стає вирішальним.';if(s.choice)return'Перед дією відокремте справді важливий напрям від того, що лише утримує увагу.';if(s.act)return'Перед виходом у дію перевірте, чи рух справді відповідає вашому рішенню.';if(s.excess)return'Не переносьте надлишок у наступний етап — відсійте його до переходу.'}if(p===4){if(s.relation)return'Перевіряйте намір у реальній взаємодії: тут уже важить не лише внутрішня правота, а й спосіб дії.';if(s.act)return'Переведіть намір у конкретну дію й дивіться, як вона працює в реальних умовах.';if(s.repair)return'Виправляйте те, що вже проявилося назовні, простим і конкретним втручанням.';if(s.inner)return'Збережіть внутрішній принцип, але перевірте його реальним вчинком.'}if(p===5){if(s.relation)return'Сила тут проявляється в тому, що навколо вас можуть узгоджуватися інші.';if(s.result)return'Оцінюйте правильність не за наміром, а за порядком і результатом, які вже створюються навколо.';if(s.act)return'Дійте як той, хто вже відповідає не лише за крок, а й за його наслідки.';if(s.balance)return'';if(minority)return'Те, що тут справді важливе, варто зробити опорою для решти ситуації.'}if(p===6){if(s.excess)return'Зупиніться там, де продовження вже не покращує справу, а перетворюється на надмірність.';if(s.repair)return'Після достатнього виправлення не робіть сам ремонт постійним способом життя.';if(s.act)return'Завершуйте так, щоб результат міг існувати без постійного додаткового натиску.';if(s.relation)return'Не підміняйте живий зв’язок його зовнішніми проявами, коли процес уже дійшов межі.'}return''}
-function norm(t){return String(t||'').trim().replace(/\s+/g,' ')}
-function tooSimilar(a,b){const words=t=>new Set(String(t||'').toLowerCase().match(/[а-яіїєґa-z]{5,}/g)||[]),A=words(a),B=words(b);if(!A.size||!B.size)return false;let n=0;A.forEach(w=>{if(B.has(w))n++});return n/Math.min(A.size,B.size)>=.48}
-function integratedText(h,line){const structural=getStructuralContext(h,[line.position]),item=structural?.lines?.[0];if(!item)return null;const meaning=norm(line.meaning),advice=norm(line.advice),signals=semanticSignals(`${line.title||''} ${meaning} ${advice}`);let role=roleSentence(item.position,signals,item,structural);if(role&&(tooSimilar(role,meaning)||tooSimilar(role,advice)))role='';return{explanation:meaning,advice:[advice,role].filter(Boolean).join(' '),roleApplied:Boolean(role)}}
-function audit(){let checked=0,roleApplied=0,untouched=0;const issues=[];for(let h=1;h<=64;h++){const hex=getHexagramData(h);if(!hex){issues.push(`${h}:missing`);continue}for(let p=1;p<=6;p++){checked++;const r=integratedText(h,getChangingLine(hex,p));if(!r?.explanation){issues.push(`${h}.${p}:missing`);continue}r.roleApplied?roleApplied++:untouched++}}const report={ok:!issues.length,checked,total:384,roleApplied,untouched,issues};globalThis.__structuralAudit=report;console.info('[structural-audit]',report);return report}
-function markExperiment(){const result=$('#answer-result');if(!result||result.classList.contains('hidden')||$('#structural-test-badge'))return;const b=document.createElement('p');b.id='structural-test-badge';b.className='structural-test-badge';b.textContent='Експеримент: позиція змінює смисловий акцент';result.querySelector('.progress')?.insertAdjacentElement('afterend',b)}
-function resolveLine(card,primary){const p=Number(card.querySelector('.changing-line-badge')?.textContent?.trim());if(Number.isInteger(p)&&p>=1&&p<=6)return getChangingLine(primary,p);const variants=Array.from({length:6},(_,i)=>getChangingLine(primary,i+1)),title=card.querySelector('strong')?.textContent?.trim()||'';return variants.find(x=>x.title===title)||null}
-function decorate(){const h=numberFrom($('#primary-details-title')?.textContent);if(!h)return;const primary=getHexagramData(h);if(!primary)return;document.querySelectorAll('#changing-lines-list .changing-line-card').forEach(card=>{const ps=Array.from(card.querySelectorAll(':scope > p')),line=resolveLine(card,primary);if(!line)return;const r=integratedText(h,line);if(!r)return;if(ps[0]){ps[0].classList.add('integrated-reading');ps[0].textContent=r.explanation}if(ps[1]){ps[1].classList.add('integrated-reading');ps[1].textContent=r.advice}})}
+
+function ensureTestStyles(){
+  if($('#structural-test-styles'))return;
+  const s=document.createElement('style');
+  s.id='structural-test-styles';
+  s.textContent=`html{min-height:100%;background:#0f172a}body{min-height:100%;padding-bottom:112px!important}.nav-bar{position:fixed!important;left:0!important;right:0!important;bottom:0!important;transform:none!important;margin:0 auto!important;width:100%!important;max-width:520px!important;border-radius:18px 18px 0 0!important;border-bottom:0!important;padding-bottom:max(8px,env(safe-area-inset-bottom))!important}.structural-test-badge{margin:.4rem 0 .8rem;padding:.5rem .7rem;border:1px dashed rgba(245,158,11,.55);border-radius:10px;color:#f59e0b;font-size:.78rem;text-align:center}.accent-chip{display:inline-block;margin:.15rem 0 .55rem;padding:.18rem .48rem;border:1px solid rgba(245,158,11,.35);border-radius:999px;color:#cbd5e1;font-size:.72rem;line-height:1.25;opacity:.9}@media(max-width:699px){body{padding-bottom:108px!important}.nav-bar{padding-bottom:max(7px,env(safe-area-inset-bottom))!important}}`;
+  document.head.appendChild(s);
+}
+
+function audit(){
+  let checked=0,matched=0;
+  const counts={};
+  const issues=[];
+  for(let h=1;h<=64;h++){
+    const hex=getHexagramData(h);
+    if(!hex){issues.push(`${h}:missing`);continue}
+    for(let p=1;p<=6;p++){
+      checked++;
+      const line=getChangingLine(hex,p);
+      if(!line){issues.push(`${h}.${p}:missing`);continue}
+      const a=selectLineAccent(line);
+      if(a.matched)matched++;
+      counts[a.accent]=(counts[a.accent]||0)+1;
+    }
+  }
+  const report={ok:!issues.length,checked,total:384,matched,unmatched:checked-matched,counts,issues};
+  globalThis.__accentAudit=report;
+  console.info('[accent-selector-audit]',report);
+  return report;
+}
+
+function markExperiment(){
+  const result=$('#answer-result');
+  if(!result||result.classList.contains('hidden'))return;
+  let b=$('#structural-test-badge');
+  if(!b){
+    b=document.createElement('p');
+    b.id='structural-test-badge';
+    b.className='structural-test-badge';
+    result.querySelector('.progress')?.insertAdjacentElement('afterend',b);
+  }
+  b.textContent='Новий експеримент: структура лише обирає акцент';
+}
+
+function resolveLine(card,primary){
+  const p=Number(card.querySelector('.changing-line-badge')?.textContent?.trim());
+  if(Number.isInteger(p)&&p>=1&&p<=6)return getChangingLine(primary,p);
+  const variants=Array.from({length:6},(_,i)=>getChangingLine(primary,i+1));
+  const title=card.querySelector('strong')?.textContent?.trim()||'';
+  return variants.find(x=>x.title===title)||null;
+}
+
+function decorate(){
+  const h=numberFrom($('#primary-details-title')?.textContent);
+  if(!h)return;
+  const primary=getHexagramData(h);
+  if(!primary)return;
+  document.querySelectorAll('#changing-lines-list .changing-line-card').forEach(card=>{
+    const line=resolveLine(card,primary);
+    if(!line)return;
+    // Restore authored text. The selector is deliberately forbidden from rewriting it.
+    const ps=Array.from(card.querySelectorAll(':scope > p'));
+    if(ps[0])ps[0].textContent=String(line.meaning||'').trim();
+    if(ps[1])ps[1].textContent=String(line.advice||'').trim();
+    card.querySelector('.accent-chip')?.remove();
+    const a=selectLineAccent(line);
+    const chip=document.createElement('span');
+    chip.className='accent-chip';
+    chip.textContent=`Акцент: ${accentLabel(a.accent)}`;
+    const anchor=card.querySelector('strong');
+    if(anchor)anchor.insertAdjacentElement('afterend',chip);
+  });
+}
+
 function render(){ensureTestStyles();markExperiment();decorate()}
-ensureTestStyles();audit();render();const target=$('#answer-result');if(target){let scheduled=false;new MutationObserver(()=>{if(scheduled)return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;render()})}).observe(target,{subtree:true,childList:true,characterData:true})}
+ensureTestStyles();audit();render();
+const target=$('#answer-result');
+if(target){
+  let scheduled=false;
+  new MutationObserver(()=>{
+    if(scheduled)return;
+    scheduled=true;
+    requestAnimationFrame(()=>{scheduled=false;render()});
+  }).observe(target,{subtree:true,childList:true,characterData:true});
+}
