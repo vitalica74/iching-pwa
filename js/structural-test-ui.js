@@ -34,36 +34,12 @@ function stableChoice(text,count){
 }
 
 const stageFrames={
-  1:[
-    'На самому початку ',
-    'Поки все лише починається, ',
-    'На першому етапі '
-  ],
-  2:[
-    'Поки ситуація ще визріває, ',
-    'Поки основа ще формується, ',
-    'На внутрішньому етапі '
-  ],
-  3:[
-    'На межі між визріванням і дією ',
-    'Коли внутрішній процес уже підходить до дії, ',
-    'Перед виходом у зовнішню дію '
-  ],
-  4:[
-    'Коли зміна виходить назовні, ',
-    'На етапі реальної взаємодії ',
-    'Коли намір уже переходить у дію, '
-  ],
-  5:[
-    'У зрілій і вже помітній фазі ',
-    'Коли наслідки вже стають видимими, ',
-    'На зрілому етапі '
-  ],
-  6:[
-    'На межі завершення ',
-    'Коли процес доходить до своєї межі, ',
-    'Наприкінці циклу '
-  ]
+  1:['На самому початку ','Поки все лише починається, ','На першому етапі '],
+  2:['Поки ситуація ще визріває, ','Поки основа ще формується, ','На внутрішньому етапі '],
+  3:['На межі між визріванням і дією ','Коли внутрішній процес уже підходить до дії, ','Перед виходом у зовнішню дію '],
+  4:['Коли зміна виходить назовні, ','На етапі реальної взаємодії ','Коли намір уже переходить у дію, '],
+  5:['У зрілій і вже помітній фазі ','Коли наслідки вже стають видимими, ','На зрілому етапі '],
+  6:['На межі завершення ','Коли процес доходить до своєї межі, ','Наприкінці циклу ']
 };
 
 const conditionalLeads={
@@ -75,17 +51,34 @@ const conditionalLeads={
   6:['Процес підійшов до межі.','Цикл уже доходить до завершення.']
 };
 
+const stageSignals={
+  1:['почат','перш','старт','зарод','відкрива','новий шлях','лише почина'],
+  2:['форму','визріва','основ','всередин','внутрішн','ще не настав','ще не вийш'],
+  3:['межі між','перехід','визрівання','підходить до дії','перед виход','готовність','назовні'],
+  4:['виходить назовні','реальн','взаємод','переходить у дію','дія вже','зовнішн'],
+  5:['зріл','наслід','помітн','видим','проявив','майстерн'],
+  6:['заверш','на межі','межа циклу','наприкін','кінець','кінці','цикл','підсум','остаточ']
+};
+
+function alreadyCarriesStage(position,text){
+  const value=String(text||'').toLowerCase();
+  return (stageSignals[position]||[]).some(signal=>value.includes(signal));
+}
+
 function blendStage(position,meaning){
   const text=String(meaning||'').trim();
   if(!text)return '';
+
+  // Якщо сама лінія вже називає свій етап, не додаємо другу службову рамку.
+  // Так структура лишається контекстом, а не повторює «початок / межу / завершення» двічі.
+  if(alreadyCarriesStage(position,text))return text;
+
   const conditional=/^(коли|якщо|поки|щойно)\b/i.test(text);
   const key=`${position}:${text}`;
-
   if(conditional){
     const leads=conditionalLeads[position]||[''];
     return `${leads[stableChoice(key,leads.length)]} ${text}`.trim();
   }
-
   const frames=stageFrames[position]||[''];
   const prefix=frames[stableChoice(key,frames.length)];
   return `${prefix}${lowerFirst(text)}`.trim();
@@ -107,10 +100,6 @@ function structuralShade(structural,item,meaning,advice){
   const source=`${meaning} ${advice}`;
   const signals=semanticSignals(source);
   const minority=structural.minority===item.type;
-
-  // Структура не створює нових людей, підтримку, ресурси, небезпеки чи події.
-  // Додатковий відтінок дозволений лише тоді, коли він повторює вже наявний напрям
-  // і робить його точнішим, а не розширює факти ситуації.
   if(!item.appropriate&&signals.verify)return 'Тут краще перевірити ще раз, ніж поспішити з остаточним кроком.';
   if(minority&&item.type==='yang'&&signals.act)return 'Дію краще спрямувати точно, без зайвого розпорошення.';
   if(minority&&item.type==='yin'&&(signals.wait||signals.ease))return 'Тут стриманість корисніша за посилення натиску.';
@@ -131,16 +120,9 @@ function integratedText(primaryNumber,line){
 
 function auditStructuralReadings(){
   const issues=[];
-  let checked=0;
-  let withShade=0;
-  let stageOnly=0;
+  let checked=0,withShade=0,stageOnly=0,suppressedStageFrames=0;
   const stageVariantCounts={1:{},2:{},3:{},4:{},5:{},6:{}};
-  const forbidden=[
-    'центральне положення','центральна позиція','будова гексаграми','структурн','відповідність','ян ','інь ','позиція',
-    'інша сторона ситуації','реальна опора','зовнішня підтримка','наявний зв’язок','наявний зв\'язок',
-    'тема міри','для самого змісту лінії','частиною самого шляху зміни','випливає з напруги самої ситуації',
-    'загальний фон ситуації','самого змісту','самої лінії'
-  ];
+  const forbidden=['центральне положення','центральна позиція','будова гексаграми','структурн','відповідність','ян ','інь ','позиція','інша сторона ситуації','реальна опора','зовнішня підтримка','наявний зв’язок','наявний зв\'язок','тема міри','для самого змісту лінії','частиною самого шляху зміни','випливає з напруги самої ситуації','загальний фон ситуації','самого змісту','самої лінії'];
 
   for(let h=1;h<=64;h++){
     const hexagram=getHexagramData(h);
@@ -151,21 +133,25 @@ function auditStructuralReadings(){
       const result=integratedText(h,line);
       if(!result?.explanation){issues.push({id:`${h}.${position}`,type:'missing-reading'});continue;}
       if(result.hasShade)withShade++;else stageOnly++;
+      if(alreadyCarriesStage(position,line.meaning))suppressedStageFrames++;
 
       const frames=stageFrames[position]||[];
-      const used=frames.find(frame=>result.explanation.startsWith(frame))||'conditional';
+      const used=frames.find(frame=>result.explanation.startsWith(frame))||(alreadyCarriesStage(position,line.meaning)?'suppressed':'conditional');
       stageVariantCounts[position][used]=(stageVariantCounts[position][used]||0)+1;
 
       const text=`${result.explanation} ${result.advice}`.toLowerCase();
       const technical=forbidden.filter(term=>text.includes(term));
       if(technical.length)issues.push({id:`${h}.${position}`,type:'meta-risk-or-invented-fact',terms:technical});
       if(result.explanation.length>460)issues.push({id:`${h}.${position}`,type:'too-long',chars:result.explanation.length});
+      if(/\b(на межі\s+\S{0,18}\s*){2}/i.test(result.explanation)||/\b(наприкінці|завершенн\w*|кінець|цикл)\b.{0,30}\b(наприкінці|завершенн\w*|кінець|цикл)\b/i.test(result.explanation)){
+        issues.push({id:`${h}.${position}`,type:'possible-stage-duplication',text:result.explanation});
+      }
     }
   }
 
-  const report={ok:issues.length===0,checked,total:384,withShade,stageOnly,stageVariantCounts,issues};
+  const report={ok:issues.length===0,checked,total:384,withShade,stageOnly,suppressedStageFrames,stageVariantCounts,issues};
   globalThis.__structuralAudit=report;
-  console.info(`[structural-audit] ${checked}/384; conservative shade: ${withShade}; stage-framed only: ${stageOnly}; ${issues.length} issue(s).`,report);
+  console.info(`[structural-audit] ${checked}/384; conservative shade: ${withShade}; stage-framed only: ${stageOnly}; suppressed duplicate frames: ${suppressedStageFrames}; ${issues.length} issue(s).`,report);
   return report;
 }
 
@@ -185,15 +171,11 @@ function resolveLine(card,primary){
   const badgeText=card.querySelector('.changing-line-badge')?.textContent?.trim()||'';
   const position=Number(badgeText);
   if(Number.isInteger(position)&&position>=1&&position<=6)return getChangingLine(primary,position);
-
   const variants=Array.from({length:6},(_,i)=>getChangingLine(primary,i+1));
   const title=card.querySelector('strong')?.textContent?.trim()||'';
   const paragraphs=Array.from(card.querySelectorAll(':scope > p'));
   const originalMeaning=paragraphs[0]?.dataset.originalText||paragraphs[0]?.textContent?.trim()||'';
-  return variants.find(item=>item.title===title&&item.meaning===originalMeaning)
-    ||variants.find(item=>item.title===title)
-    ||variants.find(item=>item.meaning===originalMeaning)
-    ||null;
+  return variants.find(item=>item.title===title&&item.meaning===originalMeaning)||variants.find(item=>item.title===title)||variants.find(item=>item.meaning===originalMeaning)||null;
 }
 
 function decorateChangingLines(){
@@ -201,7 +183,6 @@ function decorateChangingLines(){
   if(!primaryNumber)return;
   const primary=getHexagramData(primaryNumber);
   if(!primary)return;
-
   document.querySelectorAll('#changing-lines-list .changing-line-card').forEach(card=>{
     card.querySelector('.structural-line-note')?.remove();
     const paragraphs=Array.from(card.querySelectorAll(':scope > p'));
@@ -209,7 +190,6 @@ function decorateChangingLines(){
     if(!line)return;
     const integrated=integratedText(primaryNumber,line);
     if(!integrated)return;
-
     if(paragraphs[0]){
       if(!paragraphs[0].dataset.originalText)paragraphs[0].dataset.originalText=paragraphs[0].textContent.trim();
       paragraphs[0].classList.add('integrated-reading');
