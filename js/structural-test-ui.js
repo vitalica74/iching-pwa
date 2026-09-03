@@ -27,47 +27,79 @@ function lowerFirst(text){
   return value.charAt(0).toLocaleLowerCase('uk-UA')+value.slice(1);
 }
 
+function stableChoice(text,count){
+  let hash=0;
+  for(const ch of String(text||''))hash=(hash*31+ch.codePointAt(0))>>>0;
+  return count?hash%count:0;
+}
+
+const stageFrames={
+  1:[
+    'На самому початку ',
+    'Поки все лише починається, ',
+    'На першому етапі '
+  ],
+  2:[
+    'Поки ситуація ще визріває, ',
+    'Поки основа ще формується, ',
+    'На внутрішньому етапі '
+  ],
+  3:[
+    'На межі між визріванням і дією ',
+    'Коли внутрішній процес уже підходить до дії, ',
+    'Перед виходом у зовнішню дію '
+  ],
+  4:[
+    'Коли зміна виходить назовні, ',
+    'На етапі реальної взаємодії ',
+    'Коли намір уже переходить у дію, '
+  ],
+  5:[
+    'У зрілій і вже помітній фазі ',
+    'Коли наслідки вже стають видимими, ',
+    'На зрілому етапі '
+  ],
+  6:[
+    'На межі завершення ',
+    'Коли процес доходить до своєї межі, ',
+    'Наприкінці циклу '
+  ]
+};
+
+const conditionalLeads={
+  1:['Початок ще крихкий.','Процес лише набирає форму.'],
+  2:['Основа ще формується зсередини.','Ситуація ще не вийшла назовні.'],
+  3:['Внутрішнє визрівання вже підходить до дії.','Це перехідна точка між внутрішнім і зовнішнім.'],
+  4:['Зміна вже входить у реальну взаємодію.','Намір уже переходить у зовнішню дію.'],
+  5:['Наслідки вже стають помітними.','Процес уже проявився досить зріло.'],
+  6:['Процес підійшов до межі.','Цикл уже доходить до завершення.']
+};
+
 function blendStage(position,meaning){
   const text=String(meaning||'').trim();
   if(!text)return '';
-  const lower=lowerFirst(text);
   const conditional=/^(коли|якщо|поки|щойно)\b/i.test(text);
+  const key=`${position}:${text}`;
 
   if(conditional){
-    const lead={
-      1:'На початку процес ще не набрав повної сили.',
-      2:'Основа ситуації ще формується зсередини.',
-      3:'Внутрішнє визрівання вже підходить до зовнішньої дії.',
-      4:'Зміна вже входить у реальну взаємодію з обставинами.',
-      5:'Наслідки вже стають помітними у зрілому прояві.',
-      6:'Процес підійшов до своєї межі.'
-    }[position]||'';
-    return `${lead} ${text}`.trim();
+    const leads=conditionalLeads[position]||[''];
+    return `${leads[stableChoice(key,leads.length)]} ${text}`.trim();
   }
 
-  const prefix={
-    1:'На самому початку ',
-    2:'Поки ситуація ще визріває, ',
-    3:'На межі між внутрішнім визріванням і зовнішньою дією ',
-    4:'Коли зміна виходить назовні, ',
-    5:'У зрілій і вже помітній фазі ',
-    6:'На межі завершення '
-  }[position]||'';
-  return `${prefix}${lower}`.trim();
+  const frames=stageFrames[position]||[''];
+  const prefix=frames[stableChoice(key,frames.length)];
+  return `${prefix}${lowerFirst(text)}`.trim();
 }
 
 function semanticSignals(text){
   const value=String(text||'').toLowerCase();
   const has=words=>words.some(word=>value.includes(word));
   return {
-    support:has(['підтрим','допом','поруч','зв’яз','зв\'яз','опор','довір','союз','партнер','разом','відгук']),
     act:has(['діяти','дія','крок','рух','рішуч','ініціат','імпульс']),
     wait:has(['не посп','зачека','почек','пауза','зупин','стрим']),
     ease:has(['послаб','м’як','мяк','не тис','не форс','відступ']),
-    finish:has(['заверш','закінч','відпуст','межа','кінець']),
     balance:has(['мір','рівнов','баланс','середин','центр','крайн']),
-    verify:has(['перевір','підтвердж','перекона','проясн']),
-    direction:has(['напрям','курс','мета','вектор'])
+    verify:has(['перевір','підтвердж','перекона','проясн'])
   };
 }
 
@@ -76,12 +108,13 @@ function structuralShade(structural,item,meaning,advice){
   const signals=semanticSignals(source);
   const minority=structural.minority===item.type;
 
-  // Жодних пояснень роботи алгоритму. Додаємо лише короткий змістовний відтінок,
-  // який уже присутній у самій лінії й не змінює її напрям.
-  if(item.correspondence&&signals.support)return 'Зв’язок з іншою стороною ситуації може стати реальною опорою для цього кроку.';
-  if(!item.appropriate&&signals.verify)return 'Тому додаткова перевірка перед дією тут справді доречна.';
-  if(minority&&item.type==='yang'&&signals.act)return 'Імпульс до дії тут варто зберегти зосередженим і точним.';
-  if(minority&&item.type==='yin'&&(signals.wait||signals.ease))return 'Стриманість тут важливіша за спробу посилити натиск.';
+  // Структура не створює нових людей, підтримку, ресурси, небезпеки чи події.
+  // Додатковий відтінок дозволений лише тоді, коли він повторює вже наявний напрям
+  // і робить його точнішим, а не розширює факти ситуації.
+  if(!item.appropriate&&signals.verify)return 'Тут краще перевірити ще раз, ніж поспішити з остаточним кроком.';
+  if(minority&&item.type==='yang'&&signals.act)return 'Дію краще спрямувати точно, без зайвого розпорошення.';
+  if(minority&&item.type==='yin'&&(signals.wait||signals.ease))return 'Тут стриманість корисніша за посилення натиску.';
+  if(item.central&&signals.balance)return '';
   return '';
 }
 
@@ -101,10 +134,12 @@ function auditStructuralReadings(){
   let checked=0;
   let withShade=0;
   let stageOnly=0;
+  const stageVariantCounts={1:{},2:{},3:{},4:{},5:{},6:{}};
   const forbidden=[
     'центральне положення','центральна позиція','будова гексаграми','структурн','відповідність','ян ','інь ','позиція',
+    'інша сторона ситуації','реальна опора','зовнішня підтримка','наявний зв’язок','наявний зв\'язок',
     'тема міри','для самого змісту лінії','частиною самого шляху зміни','випливає з напруги самої ситуації',
-    'виразніший, ніж загальний фон','виразніша, ніж загальний фон','самого змісту','самої лінії'
+    'загальний фон ситуації','самого змісту','самої лінії'
   ];
 
   for(let h=1;h<=64;h++){
@@ -116,16 +151,21 @@ function auditStructuralReadings(){
       const result=integratedText(h,line);
       if(!result?.explanation){issues.push({id:`${h}.${position}`,type:'missing-reading'});continue;}
       if(result.hasShade)withShade++;else stageOnly++;
+
+      const frames=stageFrames[position]||[];
+      const used=frames.find(frame=>result.explanation.startsWith(frame))||'conditional';
+      stageVariantCounts[position][used]=(stageVariantCounts[position][used]||0)+1;
+
       const text=`${result.explanation} ${result.advice}`.toLowerCase();
       const technical=forbidden.filter(term=>text.includes(term));
-      if(technical.length)issues.push({id:`${h}.${position}`,type:'meta-or-technical-language',terms:technical});
+      if(technical.length)issues.push({id:`${h}.${position}`,type:'meta-risk-or-invented-fact',terms:technical});
       if(result.explanation.length>460)issues.push({id:`${h}.${position}`,type:'too-long',chars:result.explanation.length});
     }
   }
 
-  const report={ok:issues.length===0,checked,total:384,withShade,stageOnly,issues};
+  const report={ok:issues.length===0,checked,total:384,withShade,stageOnly,stageVariantCounts,issues};
   globalThis.__structuralAudit=report;
-  console.info(`[structural-audit] ${checked}/384; contextual shade: ${withShade}; stage-framed only: ${stageOnly}; ${issues.length} issue(s).`,report);
+  console.info(`[structural-audit] ${checked}/384; conservative shade: ${withShade}; stage-framed only: ${stageOnly}; ${issues.length} issue(s).`,report);
   return report;
 }
 
