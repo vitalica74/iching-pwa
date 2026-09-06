@@ -33,10 +33,11 @@ function transitionConclusion(primary,secondary,positions){
 function splitSentences(text){return String(text??'').trim().match(/[^.!?…]+(?:[.!?…]+|$)/g)?.map(s=>s.trim()).filter(Boolean)||[]}
 function renderActionPaths(){
   const p=$('#answer-action');if(!p)return;
+  if(p.querySelector('.action-paths'))return;
   const text=p.textContent.trim();
   const marker='Це лише частина шляхів, які видно звідси.';
   const markerIndex=text.indexOf(marker);
-  if(markerIndex<0){if(p.dataset.crossroads==='1'){p.dataset.crossroads='0';p.textContent=text}return;}
+  if(markerIndex<0){p.removeAttribute('data-crossroads');return;}
   const pathsText=text.slice(0,markerIndex).trim();
   const tail=text.slice(markerIndex).trim();
   const paths=splitSentences(pathsText);
