@@ -22,12 +22,7 @@ function markExperiment(){
   b.textContent='Новий експеримент: стан → що змінюється → новий стан';
 }
 
-function changingPositions(){
-  return [...document.querySelectorAll('#changing-lines-list .changing-line-card')]
-    .map(card=>Number(card.querySelector('.changing-line-badge')?.textContent?.trim()))
-    .filter(p=>Number.isInteger(p)&&p>=1&&p<=6);
-}
-
+function changingPositions(){return [...document.querySelectorAll('#changing-lines-list .changing-line-card')].map(card=>Number(card.querySelector('.changing-line-badge')?.textContent?.trim())).filter(p=>Number.isInteger(p)&&p>=1&&p<=6)}
 function lineData(hex,p){return getChangingLine(hex,p)}
 function linePhrase(hex,p){const line=lineData(hex,p);return String(line?.title||line?.meaning||`Лінія ${p}`).trim()}
 
@@ -44,12 +39,9 @@ function transitionConclusion(primary,secondary,positions){
 }
 
 function hideRepeatedRationale(){
-  const rationale=$('#rationale-lines');
-  if(rationale)rationale.classList.add('structural-test-hidden-rationale');
-  const transition=$('#rationale-transition');
-  if(transition)transition.classList.add('structural-test-hidden-rationale');
+  const rationale=$('#rationale-lines');if(rationale)rationale.classList.add('structural-test-hidden-rationale');
+  const transition=$('#rationale-transition');if(transition)transition.classList.add('structural-test-hidden-rationale');
 }
-
 function clearTransitionPath(){$('#transition-path-experiment')?.remove()}
 
 function renderTransitionPath(){
@@ -58,38 +50,33 @@ function renderTransitionPath(){
   const secondaryDetails=$('#secondary-details');
   const hasVisibleSecondary=Boolean(secondaryDetails&&!secondaryDetails.classList.contains('hidden'));
   const positions=changingPositions();
-  if(!primaryNumber||!/Змінні лінії \(\d+\)/.test(changingTitle)||!positions.length){clearTransitionPath();return;}
+  if(!primaryNumber){clearTransitionPath();return;}
   const primary=getHexagramData(primaryNumber);
   if(!primary){clearTransitionPath();return;}
-  const secondaryNumber=hasVisibleSecondary?numberFrom($('#secondary-details-title')?.textContent):null;
-  const secondary=secondaryNumber?getHexagramData(secondaryNumber):null;
   const logicBody=$('#rationale-lines')?.parentElement;
   if(!logicBody){clearTransitionPath();return;}
   let box=$('#transition-path-experiment');
   if(!box){box=document.createElement('section');box.id='transition-path-experiment';box.className='transition-path';logicBody.appendChild(box)}
   else if(box.parentElement!==logicBody)logicBody.appendChild(box);
+
+  const hasChanges=/Змінні лінії \(\d+\)/.test(changingTitle)&&positions.length>0;
+  if(!hasChanges){
+    box.innerHTML=`<p class="transition-path-title">Як читати стан</p><p class="transition-path-row"><span class="transition-path-label">Поточний стан</span><strong>№${primaryNumber} — ${primary.name}</strong></p><p class="transition-path-conclusion"><strong>Разом:</strong> Змінних ліній немає, тому окремого переходу не показано. Головним орієнтиром залишається зміст і порада цієї гексаграми.</p>`;
+    return;
+  }
+
+  const secondaryNumber=hasVisibleSecondary?numberFrom($('#secondary-details-title')?.textContent):null;
+  const secondary=secondaryNumber?getHexagramData(secondaryNumber):null;
   const lines=positions.map(p=>`<li><strong>Лінія ${p}:</strong> ${linePhrase(primary,p)}</li>`).join('');
   const together=transitionConclusion(primary,secondary,positions);
   box.innerHTML=`<p class="transition-path-title">Як читати перехід</p><p class="transition-path-row"><span class="transition-path-label">Було</span><strong>№${primaryNumber} — ${primary.name}</strong></p><p class="transition-path-row"><span class="transition-path-label">Змінюється</span></p><ul class="transition-path-lines">${lines}</ul>${secondary?`<p class="transition-path-row"><span class="transition-path-label">Стає</span><strong>№${secondaryNumber} — ${secondary.name}</strong></p>`:''}${together?`<p class="transition-path-conclusion"><strong>Разом:</strong> ${together}</p>`:''}`;
 }
 
 function restoreLineCards(){
-  const h=numberFrom($('#primary-details-title')?.textContent);
-  const primary=h?getHexagramData(h):null;
-  if(!primary)return;
-  document.querySelectorAll('#changing-lines-list .changing-line-card').forEach(card=>{
-    card.querySelector('.accent-chip')?.remove();
-    const p=Number(card.querySelector('.changing-line-badge')?.textContent?.trim());
-    if(!Number.isInteger(p))return;
-    const line=getChangingLine(primary,p);
-    if(!line)return;
-    const ps=Array.from(card.querySelectorAll(':scope > p'));
-    if(ps[0])ps[0].textContent=String(line.meaning||'').trim();
-    if(ps[1])ps[1].textContent=String(line.advice||'').trim();
-  });
+  const h=numberFrom($('#primary-details-title')?.textContent);const primary=h?getHexagramData(h):null;if(!primary)return;
+  document.querySelectorAll('#changing-lines-list .changing-line-card').forEach(card=>{card.querySelector('.accent-chip')?.remove();const p=Number(card.querySelector('.changing-line-badge')?.textContent?.trim());if(!Number.isInteger(p))return;const line=getChangingLine(primary,p);if(!line)return;const ps=Array.from(card.querySelectorAll(':scope > p'));if(ps[0])ps[0].textContent=String(line.meaning||'').trim();if(ps[1])ps[1].textContent=String(line.advice||'').trim()});
 }
 
 function render(){ensureTestStyles();markExperiment();restoreLineCards();hideRepeatedRationale();renderTransitionPath()}
 ensureTestStyles();render();
-const target=$('#answer-result');
-if(target){let timer=0;new MutationObserver(()=>{clearTimeout(timer);timer=setTimeout(render,40)}).observe(target,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['class']});}
+const target=$('#answer-result');if(target){let timer=0;new MutationObserver(()=>{clearTimeout(timer);timer=setTimeout(render,40)}).observe(target,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['class']});}
