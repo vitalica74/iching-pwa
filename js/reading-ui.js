@@ -21,6 +21,7 @@ function ensureStyles(){
     .state-classical-details .classical-section>.section-heading h3{margin:0!important}
     .state-classical-details .classical-card{margin:.65rem 0!important}
     .state-classical-details .classical-note{display:block;margin-top:.45rem}
+    .line-classical-note{display:block;margin:.8rem 0 .05rem;color:var(--muted);font-size:.8rem;font-style:italic;opacity:.85}
     .crossroads-preview{margin:1rem 0 .25rem;padding:1rem;border:1px solid currentColor;border-radius:14px}.crossroads-preview h3{margin:.15rem 0 .8rem}
     .crossroads-preview ul{padding-left:1.35rem;margin:.8rem 0}.crossroads-preview li+li{margin-top:.75rem}.crossroads-open{font-style:italic;opacity:.82;margin-bottom:.15rem}
     .crossroads-choice{font-weight:750}.crossroads-test-button{margin-top:.8rem;width:100%}.crossroads-test-button[aria-expanded="true"]{opacity:.82}.reading-depth-note{margin:.8rem 0 0;opacity:.72;font-size:.92em}
@@ -51,18 +52,21 @@ function decorateChangingLineCards(primaryNumber){
   if(!primary)return;
   const variants=Array.from({length:6},(_,index)=>getChangingLine(primary,index+1));
   document.querySelectorAll('#changing-lines-list .changing-line-card').forEach(card=>{
-    if(card.querySelector('.changing-line-context'))return;
-    const title=card.querySelector('strong');
-    const meaning=card.querySelector('p');
-    const titleText=title?.textContent?.trim()||'';
-    const meaningText=meaning?.textContent?.trim()||'';
-    const line=variants.find(item=>item.title===titleText&&item.meaning===meaningText)||variants.find(item=>item.title===titleText)||variants.find(item=>item.meaning===meaningText);
-    if(!line)return;
-    const context=document.createElement('div');context.className='changing-line-context';
-    const badge=document.createElement('span');badge.className='changing-line-badge';badge.textContent=String(line.position);badge.setAttribute('aria-hidden','true');
-    const label=document.createElement('span');label.textContent=`Лінія ${line.position} — стосується вашого питання`;
-    context.append(badge,label);
-    card.insertBefore(context,card.firstChild);
+    if(!card.querySelector('.changing-line-context')){
+      const title=card.querySelector('strong');
+      const meaning=card.querySelector('p');
+      const titleText=title?.textContent?.trim()||'';
+      const meaningText=meaning?.textContent?.trim()||'';
+      const line=variants.find(item=>item.title===titleText&&item.meaning===meaningText)||variants.find(item=>item.title===titleText)||variants.find(item=>item.meaning===meaningText);
+      if(line){
+        const context=document.createElement('div');context.className='changing-line-context';
+        const badge=document.createElement('span');badge.className='changing-line-badge';badge.textContent=String(line.position);badge.setAttribute('aria-hidden','true');
+        const label=document.createElement('span');label.textContent=`Лінія ${line.position} — стосується вашого питання`;
+        context.append(badge,label);card.insertBefore(context,card.firstChild)
+      }
+    }
+    const body=card.querySelector('.line-classical-body');
+    if(body&&!body.querySelector('.line-classical-note')){const note=document.createElement('small');note.className='line-classical-note';note.textContent='(стислі авторські перекази, не цитати)';body.appendChild(note)}
   });
 }
 function renderSecondaryClassics(number){const details=$('#secondary-classics-details');if(!details)return;const classics=number?getClassicalInterpretations(number):null;setIfChanged(details.querySelector('[data-role="wilhelm"]'),classics?.wilhelm||'Класичний текст для цієї гексаграми ще не додано.');setIfChanged(details.querySelector('[data-role="shchutsky"]'),classics?.shchutsky||'Класичний текст для цієї гексаграми ще не додано.')}
