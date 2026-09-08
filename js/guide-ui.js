@@ -32,7 +32,7 @@ function ensureStyles(){
 }
 
 function closeOtherGuideDetails(current){
-  document.querySelectorAll('#answer-result .guide-more[open]').forEach(item=>{if(item!==current)item.open=false})
+  current.closest('.hexagram-guide')?.querySelectorAll('.guide-more[open]').forEach(item=>{if(item!==current)item.open=false})
 }
 
 function details(text,label='Розгорнути пояснення'){
@@ -106,5 +106,17 @@ function renderSecondary(){
   moveClassicsIntoGuide(wrap,'secondary-classics-details')
 }
 
-function renderGuide(){ensureStyles();renderPrimary();renderSecondary()}
+function installKnowledgeAccordion(){
+  const container=$('#answer-result .knowledge-sections');if(!container||container.dataset.accordionReady==='1')return;
+  container.dataset.accordionReady='1';
+  container.addEventListener('toggle',event=>{
+    const current=event.target;
+    if(!(current instanceof HTMLDetailsElement)||!current.open)return;
+    if(!current.matches(':scope > summary')&&false)return;
+    if(current.parentElement!==container)return;
+    container.querySelectorAll(':scope > details.knowledge-details[open]').forEach(item=>{if(item!==current)item.open=false});
+  },true)
+}
+
+function renderGuide(){ensureStyles();installKnowledgeAccordion();renderPrimary();renderSecondary()}
 const target=$('#answer-result');if(target){let scheduled=false;const schedule=()=>{if(scheduled)return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;renderGuide()})};new MutationObserver(schedule).observe(target,{subtree:true,childList:true,characterData:true});schedule()}
