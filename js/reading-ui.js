@@ -16,6 +16,11 @@ function ensureStyles(){
   const style=document.createElement('style');style.id='reading-flow';style.textContent=`
     .knowledge-details > summary::after{content:'+'}.knowledge-details[open] > summary::after{content:'−'}
     .line-classical-details > summary::after{content:'+' !important}.line-classical-details[open] > summary::after{content:'−' !important}
+    .state-classical-details .classical-section{margin:1rem 0 0!important;padding:0!important;border:0!important;background:transparent!important}
+    .state-classical-details .classical-section>.section-heading{margin:0 0 .7rem!important}
+    .state-classical-details .classical-section>.section-heading h3{margin:0!important}
+    .state-classical-details .classical-card{margin:.65rem 0!important}
+    .state-classical-details .classical-note{display:block;margin-top:.45rem}
     .crossroads-preview{margin:1rem 0 .25rem;padding:1rem;border:1px solid currentColor;border-radius:14px}.crossroads-preview h3{margin:.15rem 0 .8rem}
     .crossroads-preview ul{padding-left:1.35rem;margin:.8rem 0}.crossroads-preview li+li{margin-top:.75rem}.crossroads-open{font-style:italic;opacity:.82;margin-bottom:.15rem}
     .crossroads-choice{font-weight:750}.crossroads-test-button{margin-top:.8rem;width:100%}.crossroads-test-button[aria-expanded="true"]{opacity:.82}.reading-depth-note{margin:.8rem 0 0;opacity:.72;font-size:.92em}
@@ -26,8 +31,19 @@ function ensureStyles(){
   `;document.head.appendChild(style);
 }
 function appendCrossroadsPath(container,path){const split=String(path).split(' — ');if(split.length<2){container.textContent=path;return}const choice=document.createElement('strong');choice.className='crossroads-choice';choice.textContent=split.shift();container.append(choice,document.createTextNode(` — ${split.join(' — ')}`))}
-function ensureClassicalDetails(parent,id,title){let details=document.querySelector(`#${id}`);if(details)return details;details=document.createElement('details');details.id=id;details.className='line-classical-details state-classical-details';const summary=document.createElement('summary');summary.textContent=title;const body=document.createElement('div');body.className='line-classical-body';const wh=document.createElement('h5');wh.textContent='Ріхард Вільгельм';const wp=document.createElement('p');wp.dataset.role='wilhelm';const sh=document.createElement('h5');sh.textContent='Юліан Шуцький';const sp=document.createElement('p');sp.dataset.role='shchutsky';const note=document.createElement('small');note.textContent='Стислі авторські перекази, не цитати.';body.append(wh,wp,sh,sp,note);details.append(summary,body);parent?.appendChild(details);return details}
-function organizeKnowledge(){const primaryBody=$('#primary-meaning')?.parentElement;const secondaryBody=$('#secondary-meaning')?.parentElement;const oldClassics=$('#classical-section');if(primaryBody&&oldClassics&&!primaryBody.contains(oldClassics)){let wrapper=$('#primary-classics-details');if(!wrapper){wrapper=document.createElement('details');wrapper.id='primary-classics-details';wrapper.className='line-classical-details state-classical-details';const summary=document.createElement('summary');summary.textContent='Класичні трактування стану';wrapper.appendChild(summary);primaryBody.appendChild(wrapper)}if(!wrapper.contains(oldClassics))wrapper.appendChild(oldClassics)}if(secondaryBody)ensureClassicalDetails(secondaryBody,'secondary-classics-details','Класичне трактування нового стану')}
+
+function ensureClassicalDetails(parent,id,title){
+  let details=document.querySelector(`#${id}`);if(details)return details;
+  details=document.createElement('details');details.id=id;details.className='line-classical-details state-classical-details';
+  const summary=document.createElement('summary');summary.textContent=title;
+  const section=document.createElement('section');section.className='classical-section';
+  const heading=document.createElement('div');heading.className='section-heading compact-heading';
+  const h3=document.createElement('h3');h3.textContent=title;heading.appendChild(h3);
+  const makeCard=(name,role)=>{const card=document.createElement('article');card.className='classical-card';const h=document.createElement('h4');h.textContent=name;const p=document.createElement('p');p.dataset.role=role;const note=document.createElement('small');note.className='classical-note';note.textContent='(стислий авторський переказ, не цитата)';card.append(h,p,note);return card};
+  section.append(heading,makeCard('Ріхард Вільгельм','wilhelm'),makeCard('Юліан Шуцький','shchutsky'));
+  details.append(summary,section);parent?.appendChild(details);return details
+}
+function organizeKnowledge(){const primaryBody=$('#primary-meaning')?.parentElement;const secondaryBody=$('#secondary-meaning')?.parentElement;const oldClassics=$('#classical-section');if(primaryBody&&oldClassics&&!primaryBody.contains(oldClassics)){let wrapper=$('#primary-classics-details');if(!wrapper){wrapper=document.createElement('details');wrapper.id='primary-classics-details';wrapper.className='line-classical-details state-classical-details';const summary=document.createElement('summary');summary.textContent='Класичні трактування стану';wrapper.appendChild(summary);primaryBody.appendChild(wrapper)}if(!wrapper.contains(oldClassics))wrapper.appendChild(oldClassics)}if(secondaryBody)ensureClassicalDetails(secondaryBody,'secondary-classics-details','Класичні трактування нового стану')}
 function organizeConclusion(){const steps=$('#answer-result .answer-steps');const crossroads=$('#answer-action')?.closest('.answer-step');const development=$('#answer-development')?.closest('.answer-step');if(!steps||!development)return;setIfChanged(development.querySelector('h3'),'Напрямок шляху');setIfChanged(development.querySelector('.step-number'),'1');if(crossroads)crossroads.classList.add('hidden');if(steps.firstElementChild!==development)steps.prepend(development);let note=$('#reading-depth-note');if(!note){note=document.createElement('p');note.id='reading-depth-note';note.className='reading-depth-note';note.textContent='Напрямок уже видно. Деталі нижче відкривайте лише тоді, коли хочеться зрозуміти шлях глибше.';steps.insertAdjacentElement('afterend',note)}}
 function decorateChangingLineCards(primaryNumber){
   if(!primaryNumber)return;
