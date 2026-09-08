@@ -22,15 +22,21 @@ function ensureStyles(){
 .guide-mini-hex{display:flex;align-items:center;justify-content:center;flex:0 0 86px;min-height:86px}
 .guide-mini-hex .hexagram{margin:0!important;transform:scale(.66);transform-origin:center center;min-height:86px}
 .guide-mini-meta{min-width:0}.guide-mini-number{font-weight:800;color:#f59e0b;font-size:.92rem;line-height:1.1}.guide-mini-name{color:#cbd5e1;font-size:.84rem;line-height:1.3;margin-top:.24rem}
-.guide-content{width:100%;min-width:0}.guide-section{margin:0;padding:.85rem 0}.guide-section+.guide-section{border-top:1px solid rgba(148,163,184,.28);margin-top:.2rem;padding-top:1rem}.guide-section>h4{margin:.15rem 0 .5rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.035em;font-size:.82rem}.guide-short{font-weight:650;line-height:1.55}.guide-more{margin:.55rem 0 0;border-top:1px solid rgba(148,163,184,.25);padding-top:.55rem}.guide-more[open]{margin-bottom:.8rem}.guide-more summary{cursor:pointer;font-weight:650;position:relative;padding-right:1.7rem;list-style:none;color:#f59e0b}.guide-more summary::-webkit-details-marker{display:none}.guide-more p{margin:.7rem 0 .2rem;line-height:1.6}
+.guide-content{width:100%;min-width:0}.guide-section{margin:0;padding:.85rem 0}.guide-section+.guide-section{border-top:1px solid rgba(148,163,184,.28);margin-top:.2rem;padding-top:1rem}.guide-section>h4{margin:.15rem 0 .5rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.035em;font-size:.82rem}.guide-short{font-weight:650;line-height:1.55}.guide-more{margin:.55rem 0 0;border-top:1px solid rgba(148,163,184,.25);padding-top:.55rem;scroll-margin-top:10px}.guide-more[open]{margin-bottom:.8rem}.guide-more summary{cursor:pointer;font-weight:650;position:relative;padding-right:1.7rem;list-style:none;color:#f59e0b}.guide-more summary::-webkit-details-marker{display:none}.guide-more p{margin:.7rem 0 .2rem;line-height:1.6}
 .guide-classics-slot{margin-top:.65rem;padding-top:.65rem;border-top:1px solid rgba(148,163,184,.28)}.guide-classics-slot>.state-classical-details{margin:0!important}.guide-classics-slot>.state-classical-details>summary{padding:.15rem 0!important}
-.knowledge-sections>details.knowledge-details>summary::after{content:'+'}.knowledge-sections>details.knowledge-details[open]>summary::after{content:'−'}
+.knowledge-sections>details.knowledge-details{scroll-margin-top:10px}.knowledge-sections>details.knowledge-details>summary::after{content:'+'}.knowledge-sections>details.knowledge-details[open]>summary::after{content:'−'}
 .details-body .guide-more>summary::after,.hexagram-guide .guide-more>summary::after{content:'⌄'!important;position:absolute;right:.15rem;top:50%;transform:translateY(-55%);color:var(--muted);font-size:1.15rem;font-weight:500}.details-body .guide-more[open]>summary::after,.hexagram-guide .guide-more[open]>summary::after{content:'⌃'!important;transform:translateY(-35%)}
 @media(max-width:430px){.hexagram-guide{padding:.75rem .75rem .9rem}.guide-hex-head{gap:.65rem}.guide-mini-hex{flex-basis:74px;min-height:76px}.guide-mini-hex .hexagram{transform:scale(.58);min-height:76px}}
 `;
   document.head.appendChild(style)
 }
 
+function scrollOpenedToTop(element){
+  requestAnimationFrame(()=>requestAnimationFrame(()=>element.scrollIntoView({behavior:'smooth',block:'start',inline:'nearest'})))
+}
+function closeNestedDetails(parent){
+  parent?.querySelectorAll('details[open]').forEach(item=>{item.open=false})
+}
 function closeOtherGuideDetails(current){
   current.closest('.hexagram-guide')?.querySelectorAll('.guide-more[open]').forEach(item=>{if(item!==current)item.open=false})
 }
@@ -39,7 +45,10 @@ function details(text,label='Розгорнути пояснення'){
   const el=document.createElement('details');el.className='guide-more';
   const summary=document.createElement('summary');
   const closedLabel=label;const openLabel=label==='Розгорнути пояснення'?'Згорнути пояснення':label;
-  const sync=()=>{if(el.open)closeOtherGuideDetails(el);summary.textContent=el.open?openLabel:closedLabel;summary.setAttribute('aria-expanded',String(el.open))};
+  const sync=()=>{
+    if(el.open){closeOtherGuideDetails(el);scrollOpenedToTop(el)}
+    summary.textContent=el.open?openLabel:closedLabel;summary.setAttribute('aria-expanded',String(el.open))
+  };
   sync();el.addEventListener('toggle',sync);
   const p=document.createElement('p');p.textContent=text||'';el.append(summary,p);return el
 }
@@ -111,10 +120,10 @@ function installKnowledgeAccordion(){
   container.dataset.accordionReady='1';
   container.addEventListener('toggle',event=>{
     const current=event.target;
-    if(!(current instanceof HTMLDetailsElement)||!current.open)return;
-    if(!current.matches(':scope > summary')&&false)return;
-    if(current.parentElement!==container)return;
-    container.querySelectorAll(':scope > details.knowledge-details[open]').forEach(item=>{if(item!==current)item.open=false});
+    if(!(current instanceof HTMLDetailsElement)||current.parentElement!==container)return;
+    if(!current.open){closeNestedDetails(current);return;}
+    container.querySelectorAll(':scope > details.knowledge-details[open]').forEach(item=>{if(item!==current){item.open=false;closeNestedDetails(item)}});
+    scrollOpenedToTop(current)
   },true)
 }
 
